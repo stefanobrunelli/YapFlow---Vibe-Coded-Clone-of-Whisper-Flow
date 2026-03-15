@@ -1,0 +1,44 @@
+appId: com.promptflow.lite
+productName: PromptFlow Lite
+copyright: Copyright © 2026
+
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - out/**/*
+  - "!out/**/*.map"
+
+mac:
+  category: public.app-category.productivity
+  icon: resources/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  sign: false
+  title: "PromptFlow Lite ${version}"
+
+# afterSign: scripts/notarize.js  # Uncomment when you have Apple notarization credentials
+
+asar: true
+asarUnpack:
+  # Native modules must be unpacked — they are binary .node files
+  # that cannot run from inside an asar archive
+  - "node_modules/uiohook-napi/**/*"
+  - "node_modules/uiohook-napi/prebuilds/**/*"
+
+nsis:
+  # macOS-only app — no Windows installer needed

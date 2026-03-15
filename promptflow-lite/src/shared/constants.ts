@@ -27,9 +27,19 @@ export const IPC = {
   GET_APP_VERSION: 'get-app-version',
   HAS_API_KEY: 'has-api-key',
 
+  // ── Shortcut recording ──
+  START_SHORTCUT_CAPTURE: 'start-shortcut-capture',
+  STOP_SHORTCUT_CAPTURE: 'stop-shortcut-capture',
+  SAVE_SHORTCUT: 'save-shortcut',
+
+  // ── Window management ──
+  OPEN_SETTINGS_WINDOW: 'open-settings-window',
+  RESIZE_HUD: 'resize-hud',
+
   // ── Main sends (fire-and-forget events) ──
   SHORTCUT_KEYDOWN: 'shortcut-keydown',
   SHORTCUT_KEYUP: 'shortcut-keyup',
+  SHORTCUT_CAPTURED: 'shortcut-captured',
   PERMISSION_CHANGED: 'permission-changed',
   PROCESSING_STATE: 'processing-state'
 } as const
@@ -41,6 +51,8 @@ export const IPC = {
  * These are the raw HID codes, not character codes.
  */
 export const KEY_CODES = {
+  CTRL_LEFT: 29,
+  CTRL_RIGHT: 3613,
   META_LEFT: 3675, // Cmd (left)
   META_RIGHT: 3676, // Cmd (right)
   ALT_LEFT: 3640, // Option (left)

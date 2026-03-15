@@ -1,8 +1,9 @@
 /**
  * WindowManager — BrowserWindow lifecycle, vibrancy, and focus management.
  *
- * Creates a floating, always-on-top, vibrancy-enabled window that sits
- * above other apps without stealing focus during auto-paste.
+ * Two windows:
+ *   1. Main HUD — compact 400×56 pill, always-on-top, top-center of screen
+ *   2. Settings — 640×520 full-page settings, standard macOS window
  */
 
 import { BrowserWindow, screen } from 'electron'
@@ -11,21 +12,21 @@ import { is } from '@electron-toolkit/utils'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
+  private settingsWindow: BrowserWindow | null = null
 
   createWindow(): BrowserWindow {
-    // Position near center-top of the primary display
+    // Position at the bottom center of the primary display
     const primaryDisplay = screen.getPrimaryDisplay()
-    const { width: screenW } = primaryDisplay.workAreaSize
-    const winW = 480
-    const winH = 320
+    const { width: screenW, height: screenH } = primaryDisplay.workAreaSize
+    const winW = 86
+    const winH = 36
     const x = Math.round((screenW - winW) / 2)
-    const y = 80 // near top of screen
+    const y = screenH - winH - 24 // 24px from bottom
 
     this.window = new BrowserWindow({
       width: winW,
       height: winH,
-      minWidth: 380,
-      minHeight: 260,
+      resizable: false,
       x,
       y,
 
@@ -38,23 +39,15 @@ export class WindowManager {
 
       // Always visible over other apps, but as a floating panel
       alwaysOnTop: true,
-      level: 'floating',
       skipTaskbar: true,
 
-      // Native traffic lights (close/minimize/maximize) positioned nicely
-      titleBarStyle: 'hiddenInset',
-      trafficLightPosition: { x: 12, y: 10 },
-
-      // Keep visible on all Spaces and full-screen apps
-      visibleOnAllWorkspaces: true,
+      // No titleBarStyle — frame:false without hiddenInset means no traffic lights
 
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
-        // contextIsolation: true is the default and is critical for security.
-        // It ensures the renderer cannot access Node.js/Electron internals.
         contextIsolation: true,
-        nodeIntegration: false, // Never enable — security boundary
-        sandbox: false // Required for preload to access contextBridge properly
+        nodeIntegration: false,
+        sandbox: false
       }
     })
 
@@ -65,11 +58,18 @@ export class WindowManager {
     // Load the renderer
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       this.window.loadURL(process.env['ELECTRON_RENDERER_URL'])
-      // Open DevTools on the side in development
       this.window.webContents.openDevTools({ mode: 'detach' })
     } else {
       this.window.loadFile(join(__dirname, '../renderer/index.html'))
     }
+
+    this.window.webContents.on('will-navigate', (event) => {
+      event.preventDefault()
+    })
+
+    this.window.webContents.setWindowOpenHandler(() => {
+      return { action: 'deny' }
+    })
 
     // Prevent window from closing completely — hide instead
     this.window.on('close', (e) => {
@@ -80,6 +80,84 @@ export class WindowManager {
     return this.window
   }
 
+  openSettingsWindow(): void {
+    if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+      this.settingsWindow.show()
+      this.settingsWindow.focus()
+      return
+    }
+    this.settingsWindow = this.createSettingsWindow()
+  }
+
+  private createSettingsWindow(): BrowserWindow {
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const { width: screenW, height: screenH } = primaryDisplay.workAreaSize
+    const winW = 640
+    const winH = 520
+    const x = Math.round((screenW - winW) / 2)
+    const y = Math.round((screenH - winH) / 2)
+
+    const win = new BrowserWindow({
+      width: winW,
+      height: winH,
+      minWidth: 400,
+      minHeight: 400,
+      resizable: true,
+      x,
+      y,
+
+      frame: false,
+      transparent: true,
+      vibrancy: 'window',
+      visualEffectState: 'active',
+      hasShadow: true,
+
+      alwaysOnTop: false,
+      skipTaskbar: false,
+
+      titleBarStyle: 'hiddenInset',
+      trafficLightPosition: { x: 16, y: 16 },
+
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false
+      }
+    })
+
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      win.loadURL(process.env['ELECTRON_RENDERER_URL'] + '?window=settings')
+    } else {
+      win.loadFile(join(__dirname, '../renderer/index.html'), {
+        query: { window: 'settings' }
+      })
+    }
+
+    win.webContents.on('will-navigate', (event) => {
+      event.preventDefault()
+    })
+
+    win.webContents.setWindowOpenHandler(() => {
+      return { action: 'deny' }
+    })
+
+    win.on('close', (e) => {
+      e.preventDefault()
+      win.hide()
+    })
+
+    win.on('closed', () => {
+      this.settingsWindow = null
+    })
+
+    return win
+  }
+
+  closeSettingsWindow(): void {
+    this.settingsWindow?.hide()
+  }
+
   getWindow(): BrowserWindow | null {
     return this.window
   }
@@ -88,6 +166,11 @@ export class WindowManager {
     if (!this.window) return
     this.window.show()
     this.window.focus()
+  }
+
+  showInactive(): void {
+    if (!this.window) return
+    this.window.showInactive()
   }
 
   hide(): void {
@@ -112,5 +195,21 @@ export class WindowManager {
 
   isVisible(): boolean {
     return this.window?.isVisible() ?? false
+  }
+
+  resizeHud(width: number, height: number): void {
+    if (!this.window) return
+    const bounds = this.window.getBounds()
+    
+    const newX = bounds.x + Math.round((bounds.width - width) / 2)
+    // To keep it pinned to the bottom (y + height = bottomEdge), adjust y
+    const newY = bounds.y + (bounds.height - height)
+
+    this.window.setBounds({
+      x: newX,
+      y: newY,
+      width,
+      height
+    }, true)
   }
 }

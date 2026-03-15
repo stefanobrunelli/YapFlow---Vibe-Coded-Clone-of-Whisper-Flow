@@ -61,10 +61,10 @@ export class Logger {
   }
 
   private write(data: Omit<LogEntry, 'timestamp'>): void {
-    const entry: LogEntry = {
+    const entry = {
       timestamp: new Date().toISOString(),
       ...data
-    }
+    } as LogEntry
 
     // Always log to console
     const { type, ...rest } = entry

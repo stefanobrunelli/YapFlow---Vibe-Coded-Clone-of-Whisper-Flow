@@ -18,6 +18,7 @@ import { ShortcutManager } from './shortcutManager'
 import { TrayManager } from './trayManager'
 import { IpcHandlers } from './ipcHandlers'
 import { SettingsStore } from './settingsStore'
+import { DEFAULT_SETTINGS } from '../shared/types'
 import { HistoryStore } from './historyStore'
 import { OpenAIClient } from './openaiClient'
 import { PermissionChecker } from './permissionChecker'
@@ -71,22 +72,28 @@ app.whenReady().then(async () => {
   trayManager = new TrayManager(windowManager)
   trayManager.create()
 
-  // Register all IPC handlers (must come before shortcutManager so
-  // the renderer is ready to receive events)
+  // Start listening for the global hold shortcut.
+  // Initialise with the saved shortcut (falls back to default ⌘⌥Space).
+  // Must start AFTER app.whenReady()
+  shortcutManager = new ShortcutManager(
+    windowManager,
+    settings.shortcut ?? DEFAULT_SETTINGS.shortcut,
+    settings.shortcutBehavior ?? DEFAULT_SETTINGS.shortcutBehavior
+  )
+  shortcutManager.start()
+
+  // Register all IPC handlers (must come after shortcutManager is created
+  // so the shortcut capture handlers can reference it)
   ipcHandlers = new IpcHandlers(
     windowManager,
     settingsStore,
     historyStore,
     openaiClient,
     permissionChecker,
-    logger
+    logger,
+    shortcutManager
   )
   ipcHandlers.register()
-
-  // Start listening for the global hold shortcut (Cmd+Opt+Space)
-  // Must start AFTER app.whenReady()
-  shortcutManager = new ShortcutManager(windowManager)
-  shortcutManager.start()
 
   // Second-instance handler — focus our window if user tries to open again
   app.on('second-instance', () => {

@@ -13,9 +13,9 @@
     "baseUrl": ".",
     "paths": {
       "@renderer/*": ["src/*"],
-      "@shared/*": ["../../shared/*"]
+      "@shared/*": ["../shared/*"]
     },
     "types": ["vite/client"]
   },
-  "include": ["src/**/*", "index.html"]
+  "include": ["src/**/*", "index.html", "../shared/**/*"]
 }

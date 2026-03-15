@@ -1,5 +1,23 @@
+import { DEFAULT_REWRITE_PROMPTS } from './rewritePrompts'
+
 // PromptFlow Lite — Shared TypeScript types
 // Used by both main process and renderer via the IPC bridge.
+
+// ─── Shortcut ─────────────────────────────────────────────────────────────────
+
+/** A configurable global keyboard shortcut stored as uiohook-napi keycodes. */
+export interface ShortcutConfig {
+  keyCodes: number[]
+  display: string // Human-readable, e.g. '⌘⌥Space'
+}
+
+export interface ApiKeyStatus {
+  hasApiKey: boolean
+  maskedKey: string | null
+}
+
+export type ShortcutBehavior = 'hold' | 'toggle'
+export type AppearanceMode = 'system' | 'light' | 'dark'
 
 // ─── Enums / Unions ──────────────────────────────────────────────────────────
 
@@ -24,6 +42,8 @@ export type AppStatus =
 export interface AppSettings {
   transcriptionModel: TranscriptionModel
   rewriteMode: RewriteMode
+  cleanRewriteInstructions: string
+  promptRewriteInstructions: string
   autoPasteEnabled: boolean
   /** Hide from Dock; show only as menu bar app. */
   showInDock: boolean
@@ -31,16 +51,24 @@ export interface AppSettings {
   /** Window background opacity: 0.85–1.0 */
   windowOpacity: number
   hasCompletedOnboarding: boolean
+  shortcut: ShortcutConfig
+  shortcutBehavior: ShortcutBehavior
+  appearanceMode: AppearanceMode
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   transcriptionModel: 'gpt-4o-mini-transcribe',
   rewriteMode: 'clean',
-  autoPasteEnabled: false,
+  cleanRewriteInstructions: DEFAULT_REWRITE_PROMPTS.clean,
+  promptRewriteInstructions: DEFAULT_REWRITE_PROMPTS.prompt,
+  autoPasteEnabled: true,
   showInDock: false,
   launchAtLogin: false,
   windowOpacity: 0.95,
-  hasCompletedOnboarding: false
+  hasCompletedOnboarding: false,
+  shortcut: { keyCodes: [29, 3640, 57], display: '⌃⌥Space' },
+  shortcutBehavior: 'hold',
+  appearanceMode: 'system'
 }
 
 // ─── Cost & History ───────────────────────────────────────────────────────────

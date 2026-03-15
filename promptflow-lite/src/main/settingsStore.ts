@@ -11,7 +11,8 @@
 
 import { safeStorage } from 'electron'
 import Store from 'electron-store'
-import { AppSettings, DEFAULT_SETTINGS } from '../shared/types'
+import { ApiKeyStatus, AppSettings, DEFAULT_SETTINGS } from '../shared/types'
+
 
 // electron-store schema for type validation
 interface StoreSchema {
@@ -35,7 +36,9 @@ export class SettingsStore {
   // ─── Settings ──────────────────────────────────────────────────────────────
 
   getSettings(): AppSettings {
-    return this.store.get('settings', DEFAULT_SETTINGS)
+    const stored = this.store.get('settings', DEFAULT_SETTINGS)
+    // Merge with defaults so fields added in newer versions are always populated
+    return { ...DEFAULT_SETTINGS, ...stored }
   }
 
   saveSettings(settings: AppSettings): void {
@@ -84,6 +87,19 @@ export class SettingsStore {
   hasApiKey(): boolean {
     const key = this.getApiKey()
     return key !== null && key.startsWith('sk-')
+  }
+
+  getApiKeyStatus(): ApiKeyStatus {
+    const key = this.getApiKey()
+    if (!key || !key.startsWith('sk-')) {
+      return { hasApiKey: false, maskedKey: null }
+    }
+
+    const suffix = key.slice(-4)
+    return {
+      hasApiKey: true,
+      maskedKey: `${key.slice(0, 7)}...${suffix}`
+    }
   }
 
   clearApiKey(): void {

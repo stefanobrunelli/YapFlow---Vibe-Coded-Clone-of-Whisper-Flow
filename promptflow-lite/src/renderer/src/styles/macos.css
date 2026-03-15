@@ -1,0 +1,222 @@
+/**
+ * macOS-specific styles.
+ *
+ * These complement the Electron vibrancy effect and provide
+ * colors/effects that match macOS's native look.
+ */
+
+:root {
+  /* Semi-transparent surface colors for layering above vibrancy */
+  --surface-1: rgba(255, 255, 255, 0.08);
+  --surface-2: rgba(255, 255, 255, 0.12);
+  --surface-3: rgba(255, 255, 255, 0.18);
+  --panel-bg: rgba(18, 18, 22, 0.92);
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  /* Text */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+
+  /* Accent */
+  --accent: #6366f1; /* Indigo — visible on both dark and light vibrancy */
+  --accent-light: rgba(99, 102, 241, 0.25);
+
+  /* States */
+  --recording-color: #ef4444; /* Red */
+  --recording-glow: rgba(239, 68, 68, 0.35);
+  --success-color: #22c55e; /* Green */
+  --error-color: #ef4444;
+}
+
+:root[data-theme='light'] {
+  --surface-1: rgba(15, 23, 42, 0.045);
+  --surface-2: rgba(15, 23, 42, 0.075);
+  --surface-3: rgba(15, 23, 42, 0.12);
+  --panel-bg: rgba(248, 250, 252, 0.92);
+
+  --border: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.2);
+
+  --text-primary: rgba(15, 23, 42, 0.92);
+  --text-secondary: rgba(15, 23, 42, 0.68);
+  --text-tertiary: rgba(15, 23, 42, 0.48);
+}
+
+/* Frosted glass card effect */
+.glass-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-card-strong {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Pill button base style */
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.pill-btn:focus-visible {
+  ring: 2px solid var(--accent);
+}
+
+/* Recording orb pulse animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-gradient {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from right */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.2s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.2s ease-out;
+}
+
+:root[data-theme='light'] .text-white,
+:root[data-theme='light'] .text-white\/90,
+:root[data-theme='light'] .text-white\/85,
+:root[data-theme='light'] .text-white\/80,
+:root[data-theme='light'] .text-white\/75,
+:root[data-theme='light'] .text-white\/70,
+:root[data-theme='light'] .text-white\/60,
+:root[data-theme='light'] .text-white\/45,
+:root[data-theme='light'] .text-white\/40,
+:root[data-theme='light'] .text-white\/35,
+:root[data-theme='light'] .text-white\/30,
+:root[data-theme='light'] .text-white\/28,
+:root[data-theme='light'] .text-white\/25,
+:root[data-theme='light'] .text-white\/20 {
+  color: var(--text-primary) !important;
+}
+
+:root[data-theme='light'] .placeholder\:text-white\/25::placeholder {
+  color: rgba(15, 23, 42, 0.35) !important;
+}
+
+:root[data-theme='light'] .bg-white\/5,
+:root[data-theme='light'] .bg-white\/6,
+:root[data-theme='light'] .bg-white\/8,
+:root[data-theme='light'] .bg-white\/10,
+:root[data-theme='light'] .bg-white\/12,
+:root[data-theme='light'] .bg-white\/15,
+:root[data-theme='light'] .bg-white\/20 {
+  background-color: var(--surface-2) !important;
+}
+
+:root[data-theme='light'] .border-white\/8,
+:root[data-theme='light'] .border-white\/10,
+:root[data-theme='light'] .border-white\/12,
+:root[data-theme='light'] .border-white\/15,
+:root[data-theme='light'] .border-white\/20,
+:root[data-theme='light'] .border-white\/30,
+:root[data-theme='light'] .border-white\/40 {
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='light'] .bg-black\/40 {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+:root[data-theme='light'] .border-t-white,
+:root[data-theme='light'] .border-t-white\/60 {
+  border-top-color: rgba(15, 23, 42, 0.9) !important;
+}
+
+:root[data-theme='light'] .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+:root[data-theme='light'] .hover\:text-white\/70:hover,
+:root[data-theme='light'] .hover\:text-white\/60:hover,
+:root[data-theme='light'] .hover\:text-white\/50:hover,
+:root[data-theme='light'] .hover\:text-white:hover {
+  color: rgba(15, 23, 42, 0.92) !important;
+}
+
+:root[data-theme='light'] .hover\:bg-white\/8:hover,
+:root[data-theme='light'] .hover\:bg-white\/10:hover,
+:root[data-theme='light'] .hover\:bg-white\/15:hover,
+:root[data-theme='light'] .active\:bg-white\/15:active {
+  background-color: rgba(15, 23, 42, 0.09) !important;
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.28);
+}

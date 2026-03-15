@@ -36,11 +36,6 @@ export class TrayManager {
     this.tray = new Tray(icon)
     this.tray.setToolTip('PromptFlow Lite')
     this.updateMenu()
-
-    // Click on tray icon → toggle window
-    this.tray.on('click', () => {
-      this.windowManager.toggleVisibility()
-    })
   }
 
   updateMenu(): void {
@@ -50,6 +45,11 @@ export class TrayManager {
       {
         label: 'Show PromptFlow Lite',
         click: () => this.windowManager.show()
+      },
+      {
+        label: 'Settings...',
+        accelerator: 'CmdOrCtrl+,',
+        click: () => this.windowManager.openSettingsWindow()
       },
       { type: 'separator' },
       {

@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm create @quick-start/electron@latest promptflow-lite -- --template react-ts)"
+      "Bash(npm create @quick-start/electron@latest promptflow-lite -- --template react-ts)",
+      "Bash(find \"/Users/stefanobrunelli/Desktop/Whisper App | Vibe Coding Project/promptflow-lite\" -type f)",
+      "Bash(find \"/Users/stefanobrunelli/Desktop/Whisper App | Vibe Coding Project/promptflow-lite/src/renderer/src\" -type f)"
     ]
   }
 }

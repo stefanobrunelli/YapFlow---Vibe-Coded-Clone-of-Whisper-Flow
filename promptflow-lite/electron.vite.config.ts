@@ -27,14 +27,7 @@ export default defineConfig({
         '@shared': resolve('src/shared')
       }
     },
-    plugins: [react()],
-    css: {
-      postcss: {
-        plugins: [
-          require('tailwindcss'),
-          require('autoprefixer')
-        ]
-      }
-    }
+    plugins: [react()]
+    // PostCSS is configured via postcss.config.js at the root — Vite picks it up automatically
   }
 })
