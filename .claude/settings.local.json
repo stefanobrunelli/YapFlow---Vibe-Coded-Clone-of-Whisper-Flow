@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create @quick-start/electron@latest promptflow-lite -- --template react-ts)"
+    ]
+  }
+}
