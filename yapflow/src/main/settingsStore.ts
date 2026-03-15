@@ -6,7 +6,7 @@
  * it using the OS keychain (Keychain on macOS). The key is NEVER stored
  * in plaintext on disk.
  *
- * Storage location: ~/Library/Application Support/PromptFlowLite/config.json
+ * Storage location: ~/Library/Application Support/YapFlow/config.json
  */
 
 import { safeStorage } from 'electron'

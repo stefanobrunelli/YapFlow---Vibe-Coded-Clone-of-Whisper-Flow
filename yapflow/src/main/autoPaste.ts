@@ -11,7 +11,7 @@
  *   5. Re-enable focus on the HUD
  *
  * Why we don't hide:
- *   The global shortcut fires via uiohook at OS level, so PromptFlow never
+ *   The global shortcut fires via uiohook at OS level, so YapFlow never
  *   becomes the frontmost application. The user's target app (VS Code, Notes,
  *   etc.) retains focus throughout recording + processing. There is no need
  *   to hide and re-show the HUD.
@@ -63,7 +63,7 @@ export class AutoPaste {
       await sleep(80)
 
       // Step 4: AppleScript Cmd+V — pastes into the frontmost app.
-      // Since uiohook never activates PromptFlow, the target app retains
+      // Since uiohook never activates YapFlow, the target app retains
       // focus and this paste lands in the correct place.
       const script = `tell application "System Events" to keystroke "v" using command down`
       execSync(`osascript -e '${escapeSingleQuotes(script)}'`, {

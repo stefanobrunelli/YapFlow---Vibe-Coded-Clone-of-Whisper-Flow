@@ -1,4 +1,4 @@
-# PromptFlow Lite
+# YapFlow
 
 A lightweight macOS alternative to Wispr Flow. Hold **⌘⌥Space** to record your voice, release to transcribe and rewrite it, then paste into any app.
 
@@ -38,7 +38,7 @@ node --version  # Should show v20.x.x
 ### 2. Install dependencies
 
 ```bash
-cd promptflow-lite
+cd yapflow
 npm install
 ```
 
@@ -73,7 +73,7 @@ The app needs two permissions to work fully:
 
 **Microphone** (required):
 - Granted automatically the first time you record (macOS shows a dialog)
-- If you denied it: System Settings → Privacy & Security → Microphone → add PromptFlow Lite
+- If you denied it: System Settings → Privacy & Security → Microphone → add YapFlow
 
 **Input Monitoring** (required for the shortcut):
 - System Settings → Privacy & Security → Input Monitoring
@@ -112,7 +112,7 @@ Switch modes with the tab selector in the window, or set a default in Settings.
 npm run package:mac
 ```
 
-Output: `dist/PromptFlow Lite-0.1.0-arm64.dmg` and `-x64.dmg`
+Output: `dist/YapFlow-0.1.0-arm64.dmg` and `YapFlow-0.1.0-x64.dmg`
 
 ## Architecture
 
@@ -157,7 +157,7 @@ src/
 - Restart the app after granting Input Monitoring
 
 **"Failed to access microphone":**
-- Check System Settings → Privacy → Microphone → PromptFlow Lite is allowed
+- Check System Settings → Privacy → Microphone → YapFlow is allowed
 
 **Auto-paste not working:**
 - Check System Settings → Privacy → Accessibility → app is listed and checked
@@ -169,7 +169,7 @@ src/
 - On Apple Silicon ensure you're using the arm64 Node binary: `node -p process.arch` should show `arm64`
 
 **Settings not persisting:**
-- Settings are stored in `~/Library/Application Support/PromptFlowLite/config.json`
+- Settings are stored in `~/Library/Application Support/YapFlow/config.json`
 - API key is stored encrypted in the OS Keychain — check with Keychain Access app
 
 ## Cost Estimates

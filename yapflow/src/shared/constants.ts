@@ -1,4 +1,4 @@
-// PromptFlow Lite — Shared constants
+// YapFlow — Shared constants
 // Single source of truth for IPC channel names, shortcut keys, and model IDs.
 // Importing from both main process and renderer keeps typos impossible.
 
@@ -41,7 +41,8 @@ export const IPC = {
   SHORTCUT_KEYUP: 'shortcut-keyup',
   SHORTCUT_CAPTURED: 'shortcut-captured',
   PERMISSION_CHANGED: 'permission-changed',
-  PROCESSING_STATE: 'processing-state'
+  PROCESSING_STATE: 'processing-state',
+  API_KEY_CHANGED: 'api-key-changed'
 } as const
 
 // ─── uiohook-napi Key Codes ───────────────────────────────────────────────────
@@ -85,5 +86,5 @@ export const COST_RATES = {
 // ─── History Config ───────────────────────────────────────────────────────────
 
 export const HISTORY = {
-  MAX_ENTRIES: 500
+  MAX_ENTRIES: 100
 } as const

@@ -4,7 +4,7 @@
  * Stores up to MAX_HISTORY_ENTRIES entries. Oldest entries are pruned
  * automatically on insert.
  *
- * Storage location: ~/Library/Application Support/PromptFlowLite/history.json
+ * Storage location: ~/Library/Application Support/YapFlow/history.json
  */
 
 import Store from 'electron-store'

@@ -132,6 +132,12 @@ const api = {
     return () => ipcRenderer.removeListener(IPC.SHORTCUT_CAPTURED, listener)
   },
 
+  onApiKeyChanged: (cb: () => void): (() => void) => {
+    const listener = (): void => cb()
+    ipcRenderer.on(IPC.API_KEY_CHANGED, listener)
+    return () => ipcRenderer.removeListener(IPC.API_KEY_CHANGED, listener)
+  },
+
   // ── Window management ──────────────────────────────────────────────────────
   openSettingsWindow: (): void => ipcRenderer.send(IPC.OPEN_SETTINGS_WINDOW),
   resizeHud: (width: number, height: number): void => ipcRenderer.send(IPC.RESIZE_HUD, width, height)

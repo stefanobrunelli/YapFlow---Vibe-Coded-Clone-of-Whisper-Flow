@@ -37,5 +37,15 @@ export function useSettings() {
     setApiKeyStatus(status)
   }, [])
 
+  // Refresh when the main process notifies us the API key changed (e.g. set in settings window)
+  useEffect(() => {
+    return window.api.onApiKeyChanged(() => {
+      window.api.getApiKeyStatus().then((status) => {
+        setHasApiKey(status.hasApiKey)
+        setApiKeyStatus(status)
+      })
+    })
+  }, [])
+
   return { settings, hasApiKey, apiKeyStatus, loading, saveSettings, refreshApiKeyStatus }
 }

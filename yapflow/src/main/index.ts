@@ -1,5 +1,5 @@
 /**
- * PromptFlow Lite — Main Process Entry Point
+ * YapFlow — Main Process Entry Point
  *
  * Architecture:
  *   1. Enforce single instance (prevent duplicate app windows)
@@ -43,7 +43,7 @@ let ipcHandlers: IpcHandlers
 
 app.whenReady().then(async () => {
   // Set app-level defaults for macOS
-  electronApp.setAppUserModelId('com.promptflow.lite')
+  electronApp.setAppUserModelId('com.yapflow.app')
 
   // Open DevTools with F12 in development; close on production builds
   app.on('browser-window-created', (_, window) => {

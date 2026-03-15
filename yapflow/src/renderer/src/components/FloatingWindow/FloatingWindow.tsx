@@ -12,9 +12,10 @@ interface FloatingWindowProps {
   state: AppState
   activeMode: RewriteMode
   onModeChange: (mode: RewriteMode) => void
+  hasApiKey: boolean
 }
 
-export function FloatingWindow({ state, activeMode, onModeChange }: FloatingWindowProps) {
+export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: FloatingWindowProps) {
   const { status } = state
   const [isHovered, setIsHovered] = useState(false)
 
@@ -44,8 +45,8 @@ export function FloatingWindow({ state, activeMode, onModeChange }: FloatingWind
   }, [isExpanded, isRecording])
 
   return (
-    <div 
-      className="drag-region flex items-center justify-center w-full h-full overflow-hidden transition-all duration-300 ease-in-out px-1 rounded-full"
+    <div
+      className={`drag-region flex items-center justify-center w-full h-full overflow-hidden transition-all duration-300 ease-in-out px-1 rounded-full${!hasApiKey ? ' bg-orange-500/40' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -55,6 +56,16 @@ export function FloatingWindow({ state, activeMode, onModeChange }: FloatingWind
              <div className="flex items-center justify-center w-full h-full">
                <RecordingOrb status={status} compact />
              </div>
+          ) : !hasApiKey ? (
+            <div className="flex items-center w-full justify-between no-drag gap-1 px-1">
+              <span className="text-[11px] text-amber-400/90 font-medium truncate">⚠ No API key</span>
+              <button
+                onClick={() => window.api.openSettingsWindow()}
+                className="text-[10px] text-amber-300/70 hover:text-amber-200 underline underline-offset-2 cursor-pointer shrink-0"
+              >
+                Open Settings
+              </button>
+            </div>
           ) : (
             <div className="flex items-center w-full justify-between no-drag gap-0.5">
                {MODES.map((mode) => (
@@ -78,7 +89,6 @@ export function FloatingWindow({ state, activeMode, onModeChange }: FloatingWind
         </div>
       ) : (
         <div className="flex items-center justify-center w-full h-full animate-in fade-in duration-300">
-          {/* Default tiny state: just the compact orb. */}
           <RecordingOrb status={status} compact />
         </div>
       )}

@@ -107,6 +107,8 @@ export class IpcHandlers {
       this.shortcutManager.updateBehavior(payload.settings.shortcutBehavior)
       if (payload.apiKey !== undefined) {
         this.settingsStore.saveApiKey(payload.apiKey)
+        const hudWin = this.windowManager.getWindow()
+        hudWin?.webContents.send(IPC.API_KEY_CHANGED)
       }
       // Apply dock visibility immediately (no restart needed)
       if (payload.settings.showInDock) {

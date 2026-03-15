@@ -1,7 +1,7 @@
 /**
  * TrayManager — macOS menu bar icon and context menu.
  *
- * Since PromptFlow Lite hides from the Dock by default, the tray is the
+ * Since YapFlow hides from the Dock by default, the tray is the
  * primary way to access the app and quit it.
  */
 
@@ -34,7 +34,7 @@ export class TrayManager {
     }
 
     this.tray = new Tray(icon)
-    this.tray.setToolTip('PromptFlow Lite')
+    this.tray.setToolTip('YapFlow')
     this.updateMenu()
   }
 
@@ -43,7 +43,7 @@ export class TrayManager {
 
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Show PromptFlow Lite',
+        label: 'Show YapFlow',
         click: () => this.windowManager.show()
       },
       {
@@ -58,7 +58,7 @@ export class TrayManager {
       },
       { type: 'separator' },
       {
-        label: 'Quit PromptFlow Lite',
+        label: 'Quit YapFlow',
         accelerator: 'Command+Q',
         click: () => app.exit(0)
       }

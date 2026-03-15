@@ -1,5 +1,5 @@
-appId: com.promptflow.lite
-productName: PromptFlow Lite
+appId: com.yapflow.app
+productName: YapFlow
 copyright: Copyright © 2026
 
 directories:
@@ -29,7 +29,7 @@ mac:
 
 dmg:
   sign: false
-  title: "PromptFlow Lite ${version}"
+  title: "YapFlow ${version}"
 
 # afterSign: scripts/notarize.js  # Uncomment when you have Apple notarization credentials
 

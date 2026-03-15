@@ -23,7 +23,7 @@ export function GeneralSection({ settings, permissions, onChange }: GeneralSecti
 
   const handleRequestAccessibility = async () => {
     await window.api.requestAccessibility()
-    alert('Please restart PromptFlow Lite after granting Accessibility permission.')
+    alert('Please restart YapFlow after granting Accessibility permission.')
   }
 
   const handleChangeShortcut = async () => {

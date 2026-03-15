@@ -69,7 +69,7 @@ function HudApp() {
     document.documentElement.style.colorScheme = resolvedAppearance
   }, [loading, settings.appearanceMode, systemAppearance])
 
-  // Check permissions on mount; open settings if no API key
+  // Check permissions on mount; open settings automatically only when no API key is set
   useEffect(() => {
     window.api.checkPermissions().then(actions.updatePermissions)
     if (!loading && !hasApiKey) {
@@ -110,8 +110,7 @@ function HudApp() {
     }
 
     if (!hasApiKey) {
-      actions.setError('No API key configured. Please open Settings.')
-      window.api.openSettingsWindow()
+      actions.setError('No API key configured. Open Settings via the menu bar.')
       return
     }
 
@@ -191,6 +190,7 @@ function HudApp() {
         state={state}
         activeMode={state.activeMode}
         onModeChange={handleModeChange}
+        hasApiKey={hasApiKey}
       />
     </div>
   )

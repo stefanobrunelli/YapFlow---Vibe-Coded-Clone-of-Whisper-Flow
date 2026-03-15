@@ -13,12 +13,14 @@ import { RewriteModeSection } from './RewriteModeSection'
 import { GeneralSection } from './GeneralSection'
 import { Button } from '../shared/Button'
 import { HistoryItem } from '../History/HistoryItem'
+import { AboutSection } from './AboutSection'
 import type { HistoryEntry } from '@shared/types'
 
-type Tab = 'history' | 'general' | 'modes' | 'api'
+type Tab = 'history' | 'about' | 'general' | 'modes' | 'api'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'history', label: 'History' },
+  { id: 'about',   label: 'About' },
   { id: 'general', label: 'Settings' },
   { id: 'modes', label: 'Prompt Selector' },
   { id: 'api', label: 'API Key' }
@@ -31,9 +33,12 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('history')
   const [version, setVersion] = useState<string>('')
 
-  // Sync draft when settings load
+  // Sync draft when settings load; land new users on the About tab
   useEffect(() => {
     setDraft(settings)
+    if (!settings.hasCompletedOnboarding) {
+      setActiveTab('about')
+    }
   }, [settings])
 
   useEffect(() => {
@@ -54,7 +59,7 @@ export function SettingsPage() {
   )
 
   const handleApply = async () => {
-    await saveSettings(draft)
+    await saveSettings({ ...draft, hasCompletedOnboarding: true })
   }
 
   if (loading) {
@@ -98,6 +103,12 @@ export function SettingsPage() {
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto no-drag">
+        {activeTab === 'about' && (
+          <div className="p-5">
+            <AboutSection version={version} />
+          </div>
+        )}
+
         {activeTab === 'api' && (
           <div className="p-5">
             <ApiKeySection
@@ -131,8 +142,8 @@ export function SettingsPage() {
         {activeTab === 'history' && <HistoryTab />}
       </div>
 
-      {/* Footer — only show Apply for non-history, non-api tabs */}
-      {activeTab !== 'api' && activeTab !== 'history' && (
+      {/* Footer — only show Apply for non-history, non-api, non-about tabs */}
+      {activeTab !== 'api' && activeTab !== 'history' && activeTab !== 'about' && (
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-white/8 shrink-0 no-drag">
           <Button variant="ghost" size="sm" onClick={() => setDraft(settings)}>
             Reset

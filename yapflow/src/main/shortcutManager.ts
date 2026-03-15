@@ -116,7 +116,7 @@ export class ShortcutManager {
           const config = withFormattedShortcutDisplay({ keyCodes: this.peakCombo, display: '' })
           this.captureMode = false
           this.peakCombo = []
-          const win = this.windowManager.getWindow()
+          const win = this.windowManager.getSettingsWindow()
           win?.webContents.send(IPC.SHORTCUT_CAPTURED, config)
         }
         return

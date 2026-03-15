@@ -2,7 +2,7 @@
  * Logger — Structured cost and latency logging.
  *
  * Logs to the console in development and to a structured JSON log file
- * in production at: ~/Library/Logs/PromptFlowLite/app.log
+ * in production at: ~/Library/Logs/YapFlow/app.log
  *
  * Each log entry is a JSON object on its own line (NDJSON format).
  */
@@ -24,7 +24,7 @@ export class Logger {
 
   constructor() {
     this.isDev = !app.isPackaged
-    const logsDir = join(app.getPath('logs'), 'PromptFlowLite')
+    const logsDir = join(app.getPath('logs'), 'YapFlow')
     this.logPath = join(logsDir, 'app.log')
 
     if (!this.isDev) {

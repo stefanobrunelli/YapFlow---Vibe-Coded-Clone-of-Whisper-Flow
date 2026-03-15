@@ -54,6 +54,7 @@ declare global {
       stopShortcutCapture(): Promise<void>
       saveShortcut(config: ShortcutConfig): Promise<void>
       onShortcutCaptured(cb: (config: ShortcutConfig) => void): () => void
+      onApiKeyChanged(cb: () => void): () => void
 
       openSettingsWindow(): void
       resizeHud(width: number, height: number): void

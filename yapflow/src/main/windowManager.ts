@@ -162,6 +162,10 @@ export class WindowManager {
     return this.window
   }
 
+  getSettingsWindow(): BrowserWindow | null {
+    return this.settingsWindow
+  }
+
   show(): void {
     if (!this.window) return
     this.window.show()

@@ -1,6 +1,6 @@
 import { DEFAULT_REWRITE_PROMPTS } from './rewritePrompts'
 
-// PromptFlow Lite — Shared TypeScript types
+// YapFlow — Shared TypeScript types
 // Used by both main process and renderer via the IPC bridge.
 
 // ─── Shortcut ─────────────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   launchAtLogin: false,
   windowOpacity: 0.95,
   hasCompletedOnboarding: false,
-  shortcut: { keyCodes: [29, 3640, 57], display: '⌃⌥Space' },
+  shortcut: { keyCodes: [3675, 3640, 57], display: '⌘⌥Space' },
   shortcutBehavior: 'hold',
   appearanceMode: 'system'
 }
