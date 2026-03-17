@@ -20,7 +20,7 @@
 //
 //   return await notarize({
 //     tool: 'notarytool',
-//     appBundleId: 'com.promptflow.lite',
+//     appBundleId: 'com.yapflow.app',
 //     appPath: `${appOutDir}/${appName}.app`,
 //     appleId: process.env.APPLE_ID,
 //     appleIdPassword: process.env.APPLE_ID_PASSWORD,

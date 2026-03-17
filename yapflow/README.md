@@ -1,183 +1,193 @@
 # YapFlow
 
-A lightweight macOS alternative to Wispr Flow. Hold **⌘⌥Space** to record your voice, release to transcribe and rewrite it, then paste into any app.
+> Voice-to-text for Mac that actually understands what you're saying.
+
+Hold a key, speak, release — YapFlow transcribes your voice and rewrites it into clean text or a polished AI prompt, instantly pasted wherever you're typing.
+
+![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?logo=apple)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Stack](https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20TypeScript-informational)
+![Powered by](https://img.shields.io/badge/powered%20by-OpenAI-412991)
+
+---
+
+## What It Does
+
+YapFlow lives quietly in your Mac's menu bar. Press and hold **⌘⌥Space**, say what you want, then release — your words appear instantly as clean text (or a structured AI prompt) in whatever app you were just typing in.
+
+Built as a fast, private, low-cost alternative to Wispr Flow. No subscription. No cloud sync. Just your voice and your API key.
+
+---
 
 ## Features
 
-- **Hold to record** — global shortcut (Cmd+Option+Space) captures mic while held
-- **Three output modes** — Raw Transcript, Clean Text, or AI Prompt
-- **Clipboard + auto-paste** — result goes to clipboard; auto-paste into the active app if Accessibility is granted
-- **Local history** — last 500 results stored locally with cost and latency data
-- **Secure API key storage** — key encrypted via macOS Keychain (safeStorage), never stored in plaintext
-- **Floating always-on-top window** — vibrancy HUD effect, stays above all other apps
+- **Hold-to-record** — global shortcut works in any app, any window
+- **Three output modes** — Raw transcript · Clean text · AI Prompt
+- **Auto-paste** — result lands directly in whatever you were typing in (optional)
+- **Floating HUD** — minimal pill window stays above all other apps
+- **Local history** — last 100 recordings stored on your Mac, never sent anywhere
+- **Cost tracking** — see the USD cost of every recording, down to fractions of a cent
+- **Secure API key storage** — key encrypted in macOS Keychain, never stored in plaintext
+- **Customisable shortcut** — remap to any key combo in Settings
 
-## Prerequisites
+---
 
-| Requirement | Version |
+## For End Users (No Coding Required)
+
+You don't need to be a developer to use YapFlow. Just download the `.dmg` file and follow the guide below.
+
+**→ [Full Setup Guide — Plain English, step by step](SETUP_GUIDE.md)**
+
+The guide covers:
+- Creating an OpenAI account and getting your API key
+- Adding €5 in credit (enough for thousands of uses)
+- Downloading and installing YapFlow on your Mac
+- Granting the required macOS permissions
+- Using the app for the first time
+- Troubleshooting common issues
+
+---
+
+## For Developers
+
+### Prerequisites
+
+| Requirement | Details |
 |---|---|
 | macOS | 13 Ventura or later |
-| Node.js | 20 LTS (`nvm install 20`) |
+| Node.js | 20 LTS — `nvm install 20` |
 | Xcode CLI | `xcode-select --install` |
-| OpenAI API key | With access to `gpt-4o-mini-transcribe` + `gpt-4o-mini` |
+| OpenAI API key | Needs access to `gpt-4o-mini-transcribe` and `gpt-4o-mini` |
 
-## Setup
-
-### 1. Install Node.js
+### Quick Start
 
 ```bash
-# Install nvm (Node Version Manager)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.zshrc
-
-# Install and use Node 20
-nvm install 20
-nvm use 20
-node --version  # Should show v20.x.x
-```
-
-### 2. Install dependencies
-
-```bash
+# Clone and enter the project
+git clone <repo-url>
 cd yapflow
+
+# Install dependencies
 npm install
-```
 
-### 3. Rebuild native modules for Electron
-
-`uiohook-napi` is a native module that must be compiled for Electron's specific Node version:
-
-```bash
+# Rebuild native modules for Electron
 npx electron-rebuild -f -w uiohook-napi
-```
 
-If this fails with a build error, ensure Xcode CLI tools are installed:
-```bash
-xcode-select --install
-```
-
-### 4. Run in development
-
-```bash
+# Start in development mode (hot reload on renderer changes)
 npm run dev
 ```
 
-The app will launch. The renderer has hot module replacement (HMR). Changes to the main process require restarting.
+On first launch the Settings window opens automatically. Enter your OpenAI API key (`sk-...`) and click Save.
 
-### 5. Configure API key
+### Grant macOS Permissions
 
-When the app first launches, the Settings modal opens automatically. Enter your OpenAI API key (`sk-...`) and click Save. The key is encrypted with macOS Keychain and survives restarts.
+The app needs three permissions to work fully:
 
-### 6. Grant macOS permissions
-
-The app needs two permissions to work fully:
-
-**Microphone** (required):
-- Granted automatically the first time you record (macOS shows a dialog)
-- If you denied it: System Settings → Privacy & Security → Microphone → add YapFlow
-
-**Input Monitoring** (required for the shortcut):
-- System Settings → Privacy & Security → Input Monitoring
-- Add your **Terminal** app (for `npm run dev`) or the packaged app
-- This lets uiohook-napi detect the global shortcut
-
-**Accessibility** (optional, for auto-paste):
-- System Settings → Privacy & Security → Accessibility
-- Add the Electron binary or packaged app
-- Without this, the app works in clipboard-only mode
-
-## Usage
-
-1. Make sure the app is running (look for it in the menu bar)
-2. Open any text field (Notes, browser, IDE, etc.)
-3. **Hold ⌘⌥Space** — the orb turns red and recording begins
-4. **Speak** your text or prompt
-5. **Release** — transcription and rewriting happen automatically (~1–3s)
-6. The result is copied to your clipboard (and pasted if auto-paste is enabled)
-7. The result appears in the floating window for review
-
-## Output Modes
-
-| Mode | What it does | Cost |
+| Permission | Why | Where to grant |
 |---|---|---|
-| **Raw** | Exact transcription, no changes | Transcription only |
-| **Clean** | Removes fillers, fixes punctuation, preserves your voice | Transcription + rewrite |
-| **AI Prompt** | Transforms rambling speech into a structured AI-ready prompt | Transcription + rewrite |
+| **Input Monitoring** | Detect the global shortcut | System Settings → Privacy & Security → Input Monitoring |
+| **Microphone** | Record your voice | Auto-prompted on first use |
+| **Accessibility** | Auto-paste into the active app | System Settings → Privacy & Security → Accessibility |
 
-Switch modes with the tab selector in the window, or set a default in Settings.
+Input Monitoring is required. Accessibility is optional (clipboard-only mode works without it).
 
-## Packaging (distributable DMG)
+### Build & Distribute
 
 ```bash
-# Build for both Intel and Apple Silicon
+# Unsigned build — share with friends for testing
+npm run package:mac:unsigned
+
+# Signed build — requires Apple Developer Program ($99/year)
 npm run package:mac
 ```
 
-Output: `dist/YapFlow-0.1.0-arm64.dmg` and `YapFlow-0.1.0-x64.dmg`
+Output files land in `releases/`:
+
+| File | For |
+|---|---|
+| `YapFlow-0.1.0-arm64.dmg` | Apple Silicon Macs (M1/M2/M3/M4 — any Mac from late 2020) |
+| `YapFlow-0.1.0.dmg` | Intel Macs (pre-2020) |
+
+> **Sharing the DMG:** Send the `.dmg` file directly (or zip it for messaging apps). Recipients follow the [Setup Guide](SETUP_GUIDE.md) to install.
+> The "unidentified developer" warning on first open is expected for unsigned apps — it's not malware.
+
+---
+
+## Output Modes
+
+| Mode | What it does | Typical cost |
+|---|---|---|
+| **Raw** | Exact transcription, nothing changed | ~$0.0005 per 10s clip |
+| **Clean** | Removes filler words, fixes punctuation, keeps your voice | ~$0.001 per clip |
+| **AI Prompt** | Structures your rambling into a Goal / Context / Tasks / Output prompt | ~$0.001 per clip |
+
+Typical usage: **less than $0.001 per recording**. A €5 / $5 OpenAI credit covers thousands of uses.
+
+---
 
 ## Architecture
 
 ```
 src/
-├── shared/           # Types + IPC channel names (used by both processes)
-│   ├── types.ts      # All TypeScript interfaces
-│   └── constants.ts  # IPC channels, key codes, OpenAI config
+├── shared/              # Types + IPC channel names (shared by main & renderer)
+│   ├── types.ts         # All TypeScript interfaces
+│   └── constants.ts     # IPC channels, key codes, OpenAI model config
 │
-├── main/             # Electron main process (Node.js)
-│   ├── index.ts          # Bootstrap + app lifecycle
-│   ├── windowManager.ts  # Floating vibrancy window
-│   ├── shortcutManager.ts # Hold-to-record via uiohook-napi
-│   ├── openaiClient.ts   # SECURITY BOUNDARY — API key + OpenAI calls
-│   ├── settingsStore.ts  # electron-store + safeStorage
-│   ├── historyStore.ts   # Local history CRUD
-│   ├── autoPaste.ts      # AppleScript paste (Accessibility-gated)
-│   ├── permissionChecker.ts
-│   ├── logger.ts
-│   └── ipcHandlers.ts    # All IPC channel registrations
+├── main/                # Electron main process (Node.js — full OS access)
+│   ├── index.ts             # App lifecycle + bootstrap order
+│   ├── openaiClient.ts      # ★ Security boundary — all OpenAI calls live here
+│   ├── settingsStore.ts     # electron-store + macOS safeStorage (Keychain)
+│   ├── shortcutManager.ts   # Hold-to-record via uiohook-napi
+│   ├── windowManager.ts     # Floating HUD + Settings window
+│   ├── historyStore.ts      # Local history CRUD (up to 100 entries)
+│   ├── autoPaste.ts         # AppleScript paste (Accessibility-gated)
+│   ├── permissionChecker.ts # macOS permission status
+│   └── ipcHandlers.ts       # Registers all IPC channels
 │
-├── preload/          # Secure bridge between main and renderer
-│   └── index.ts      # contextBridge.exposeInMainWorld('api', ...)
+├── preload/             # Secure bridge between main and renderer
+│   └── index.ts         # contextBridge.exposeInMainWorld('api', ...)
 │
-└── renderer/         # React app (browser sandbox)
+└── renderer/            # React app (sandboxed — no Node.js access)
     └── src/
-        ├── App.tsx            # Root — pipeline orchestration
-        ├── hooks/             # useAppState, useRecording, useIPCListener
-        └── components/        # FloatingWindow, Settings, History
+        ├── App.tsx              # Root — HUD vs Settings routing
+        ├── hooks/               # useAppState, useRecording, useIPCListener
+        └── components/          # FloatingWindow, Settings, History
 ```
 
 **Security model:**
-- The renderer runs in a sandboxed browser context with no Node.js access
-- The preload script is the only bridge — it explicitly whitelists every IPC channel
-- The OpenAI API key lives only in the main process, encrypted in the OS Keychain
-- `contextIsolation: true`, `nodeIntegration: false` are enforced
+- The renderer runs in a sandboxed browser context — no Node.js, no filesystem
+- The preload script is the only bridge and explicitly whitelists every channel
+- The OpenAI API key never leaves the main process; it's encrypted via macOS Keychain
+- `contextIsolation: true` · `nodeIntegration: false` · `sandbox: false`
+
+---
 
 ## Troubleshooting
 
-**Shortcut not working:**
-- Check System Settings → Privacy → Input Monitoring → Terminal is listed
-- Restart the app after granting Input Monitoring
+| Problem | Fix |
+|---|---|
+| Shortcut does nothing | System Settings → Privacy & Security → Input Monitoring → add YapFlow |
+| "Unidentified developer" warning | System Settings → Privacy & Security → scroll down → "Open Anyway" |
+| Microphone access denied | System Settings → Privacy & Security → Microphone → add YapFlow |
+| Auto-paste doesn't work | System Settings → Privacy & Security → Accessibility → add YapFlow |
+| `uiohook-napi` build error | Run `xcode-select --install`, then `npx electron-rebuild -f -w uiohook-napi` |
+| Settings lost after update | Config: `~/Library/Application Support/YapFlow/config.json` — API key is in Keychain |
 
-**"Failed to access microphone":**
-- Check System Settings → Privacy → Microphone → YapFlow is allowed
+Full troubleshooting steps: [Setup Guide → Troubleshooting section](SETUP_GUIDE.md#troubleshooting)
 
-**Auto-paste not working:**
-- Check System Settings → Privacy → Accessibility → app is listed and checked
-- The window must fully hide before paste happens (~100ms); if the target app is slow to focus, increase the delay in `autoPaste.ts`
+---
 
-**`uiohook-napi` build fails:**
-- Run: `xcode-select --install`
-- Then: `npx electron-rebuild -f -w uiohook-napi`
-- On Apple Silicon ensure you're using the arm64 Node binary: `node -p process.arch` should show `arm64`
+## Tech Stack
 
-**Settings not persisting:**
-- Settings are stored in `~/Library/Application Support/YapFlow/config.json`
-- API key is stored encrypted in the OS Keychain — check with Keychain Access app
+- **[Electron 31](https://electronjs.org)** — Desktop app shell
+- **[React 18](https://react.dev) + [TypeScript](https://typescriptlang.org)** — UI and type safety
+- **[electron-vite](https://electron-vite.org)** — Build tooling
+- **[Tailwind CSS](https://tailwindcss.com)** — Styling
+- **[OpenAI SDK](https://github.com/openai/openai-node)** — Transcription + rewriting
+- **[uiohook-napi](https://github.com/nicholasgasior/uiohook-napi)** — Global keyboard events
+- **[electron-store](https://github.com/sindresorhus/electron-store)** — Persistent settings
 
-## Cost Estimates
+---
 
-| Operation | Model | Approx. cost |
-|---|---|---|
-| 10s voice clip | gpt-4o-mini-transcribe | ~$0.0005 |
-| Rewrite (clean/prompt) | gpt-4o-mini | ~$0.0001–$0.0003 |
-| Raw mode | — | $0.00 (no rewrite) |
+## License
 
-Typical usage cost: **< $0.001 per recording**.
+MIT — do whatever you want with it.

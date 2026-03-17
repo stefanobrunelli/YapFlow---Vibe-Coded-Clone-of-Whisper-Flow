@@ -20,7 +20,9 @@ export class TrayManager {
   create(): void {
     // Use a template image for automatic dark/light mode adaptation on macOS.
     // Template images must be named *Template.png
-    const iconPath = join(__dirname, '../../resources/trayIconTemplate.png')
+    const iconPath = app.isPackaged
+      ? join(process.resourcesPath, 'resources/trayIconTemplate.png')
+      : join(__dirname, '../../resources/trayIconTemplate.png')
     let icon: Electron.NativeImage
 
     try {

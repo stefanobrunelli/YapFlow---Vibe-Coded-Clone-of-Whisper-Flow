@@ -4,7 +4,7 @@ copyright: Copyright © 2026
 
 directories:
   buildResources: resources
-  output: dist
+  output: releases
 
 files:
   - out/**/*
@@ -21,17 +21,21 @@ mac:
     - target: dmg
       arch:
         - arm64
-        - x64
     - target: zip
       arch:
         - arm64
-        - x64
 
 dmg:
   sign: false
   title: "YapFlow ${version}"
 
 # afterSign: scripts/notarize.js  # Uncomment when you have Apple notarization credentials
+
+extraResources:
+  - from: resources/trayIconTemplate.png
+    to: resources/trayIconTemplate.png
+  - from: resources/trayIconTemplate@2x.png
+    to: resources/trayIconTemplate@2x.png
 
 asar: true
 asarUnpack:
