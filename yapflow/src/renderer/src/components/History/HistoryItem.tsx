@@ -10,6 +10,8 @@ interface HistoryItemProps {
 
 export function HistoryItem({ entry, onDelete }: HistoryItemProps) {
   const [copied, setCopied] = useState(false)
+  const transcriptionProvider = entry.transcriptionProvider ?? 'openai'
+  const rewriteProvider = entry.rewriteProvider ?? 'openai'
 
   const handleCopy = async () => {
     await window.api.copyToClipboard(entry.rewrittenText)
@@ -25,9 +27,15 @@ export function HistoryItem({ entry, onDelete }: HistoryItemProps) {
     <div className="glass-card p-3 flex flex-col gap-2 group">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[9px] font-medium uppercase tracking-wider">
             {modeLabel(entry.rewriteMode)}
+          </span>
+          <span className="px-1.5 py-0.5 rounded-md bg-white/8 text-white/45 text-[9px] font-medium uppercase tracking-wider">
+            Tx {transcriptionProvider}
+          </span>
+          <span className="px-1.5 py-0.5 rounded-md bg-white/8 text-white/45 text-[9px] font-medium uppercase tracking-wider">
+            Rw {rewriteProvider}
           </span>
           <span className="text-[10px] text-white/30">
             {formatRelativeTime(entry.createdAt)}

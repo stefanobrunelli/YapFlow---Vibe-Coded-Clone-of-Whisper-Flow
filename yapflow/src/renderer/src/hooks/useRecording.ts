@@ -20,9 +20,9 @@ const MIN_AUDIO_SIZE_BYTES = 1024
 
 function getPreferredMimeType(): string {
   const candidates = [
+    'audio/mp4',
     'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/mp4'
+    'audio/webm'
   ]
 
   return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? ''
@@ -33,6 +33,58 @@ export function useRecording() {
   const chunksRef = useRef<Blob[]>([])
   const startTimeRef = useRef<number>(0)
   const streamRef = useRef<MediaStream | null>(null)
+
+  const stopStream = useCallback((): void => {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+  }, [])
+
+  const discardRecording = useCallback((): void => {
+    const recorder = recorderRef.current
+
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.ondataavailable = null
+      recorder.onstop = null
+      recorder.stop()
+    }
+
+    recorderRef.current = null
+    chunksRef.current = []
+    startTimeRef.current = 0
+    stopStream()
+  }, [stopStream])
+
+  const finalizeRecording = useCallback(async (mimeTypeHint?: string): Promise<RecordingResult | null> => {
+    const startTime = startTimeRef.current
+    const chunks = chunksRef.current
+
+    recorderRef.current = null
+
+    if (chunks.length === 0 || startTime === 0) {
+      chunksRef.current = []
+      startTimeRef.current = 0
+      stopStream()
+      return null
+    }
+
+    const audioDurationMs = Date.now() - startTime
+    const mimeType = mimeTypeHint || chunks[0]?.type || 'audio/webm'
+    const blob = new Blob(chunks, { type: mimeType })
+
+    chunksRef.current = []
+    startTimeRef.current = 0
+    stopStream()
+
+    if (
+      audioDurationMs < OPENAI.MIN_AUDIO_DURATION_MS ||
+      blob.size < MIN_AUDIO_SIZE_BYTES
+    ) {
+      return null
+    }
+
+    const audio = await blob.arrayBuffer()
+    return { audio, mimeType, audioDurationMs }
+  }, [stopStream])
 
   const startRecording = useCallback(async (): Promise<boolean> => {
     try {
@@ -50,7 +102,8 @@ export function useRecording() {
       chunksRef.current = []
       startTimeRef.current = Date.now()
 
-      // Use WebM/Opus as it's well-supported and compressed
+      // Prefer MP4 on desktop when available; some STT providers are less reliable
+      // with short WebM blobs produced by MediaRecorder.
       const mimeType = getPreferredMimeType()
 
       const recorder = mimeType
@@ -63,72 +116,46 @@ export function useRecording() {
         }
       }
 
+      recorder.onerror = (event) => {
+        console.error('[useRecording] MediaRecorder error:', event)
+      }
+
       recorderRef.current = recorder
-      recorder.start()
+      recorder.start(1000)
       return true
     } catch (err) {
+      discardRecording()
       console.error('[useRecording] Failed to start recording:', err)
       return false
     }
-  }, [])
+  }, [discardRecording])
 
   const stopRecording = useCallback((): Promise<RecordingResult | null> => {
     return new Promise((resolve) => {
       const recorder = recorderRef.current
-      const startTime = startTimeRef.current
 
-      if (!recorder || recorder.state === 'inactive') {
+      if (!recorder) {
         resolve(null)
         return
       }
 
-      const audioDurationMs = Date.now() - startTime
+      if (recorder.state === 'inactive') {
+        void finalizeRecording(recorder.mimeType).then(resolve)
+        return
+      }
 
-      recorder.onstop = async () => {
-        const chunks = chunksRef.current
-        if (chunks.length === 0) {
-          stopStream()
-          recorderRef.current = null
-          resolve(null)
-          return
-        }
-
-        const mimeType = recorder.mimeType || chunks[0]?.type || 'audio/webm'
-        const blob = new Blob(chunks, { type: mimeType })
-
-        if (
-          audioDurationMs < OPENAI.MIN_AUDIO_DURATION_MS ||
-          blob.size < MIN_AUDIO_SIZE_BYTES
-        ) {
-          stopStream()
-          recorderRef.current = null
-          chunksRef.current = []
-          resolve(null)
-          return
-        }
-
-        const audio = await blob.arrayBuffer()
-
-        stopStream()
-        recorderRef.current = null
-        chunksRef.current = []
-
-        resolve({ audio, mimeType, audioDurationMs })
+      recorder.onstop = () => {
+        void finalizeRecording(recorder.mimeType).then(resolve)
       }
 
       recorder.requestData()
       recorder.stop()
     })
-  }, [])
-
-  const stopStream = (): void => {
-    streamRef.current?.getTracks().forEach((track) => track.stop())
-    streamRef.current = null
-  }
+  }, [finalizeRecording])
 
   const isRecording = (): boolean => {
     return recorderRef.current?.state === 'recording'
   }
 
-  return { startRecording, stopRecording, isRecording }
+  return { startRecording, stopRecording, discardRecording, isRecording }
 }

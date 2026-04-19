@@ -13,6 +13,7 @@ interface IPCListeners {
   onShortcutUp?: () => void
   onPermissionChanged?: (status: PermissionStatus) => void
   onProcessingState?: (state: AppStatus | string) => void
+  onForceReset?: () => void
 }
 
 export function useIPCListener(listeners: IPCListeners): void {
@@ -31,6 +32,9 @@ export function useIPCListener(listeners: IPCListeners): void {
     if (listeners.onProcessingState) {
       cleanupFns.push(window.api.onProcessingState(listeners.onProcessingState))
     }
+    if (listeners.onForceReset) {
+      cleanupFns.push(window.api.onForceReset(listeners.onForceReset))
+    }
 
     return () => {
       cleanupFns.forEach((fn) => fn())
@@ -39,6 +43,7 @@ export function useIPCListener(listeners: IPCListeners): void {
     listeners.onShortcutDown,
     listeners.onShortcutUp,
     listeners.onPermissionChanged,
-    listeners.onProcessingState
+    listeners.onProcessingState,
+    listeners.onForceReset
   ])
 }

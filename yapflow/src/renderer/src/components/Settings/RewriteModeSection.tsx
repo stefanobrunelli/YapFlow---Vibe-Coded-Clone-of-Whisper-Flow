@@ -24,12 +24,16 @@ interface RewriteModeSectionProps {
   settings: AppSettings
   activeMode: RewriteMode
   onChange: (partial: Partial<AppSettings>) => void
+  onApply?: () => Promise<void> | void
 }
 
-export function RewriteModeSection({ settings, activeMode, onChange }: RewriteModeSectionProps) {
+export function RewriteModeSection({ settings, activeMode, onChange, onApply }: RewriteModeSectionProps) {
   return (
     <div className="flex flex-col gap-3">
       <span className="text-xs font-medium text-white/80">Default Rewrite Mode</span>
+      <p className="text-[10px] text-white/40 leading-relaxed">
+        These fields are fully editable. The text you put here becomes the system instructions for the selected rewrite modes.
+      </p>
       <div className="flex flex-col gap-1.5">
         {MODES.map((mode) => (
           <button
@@ -63,7 +67,7 @@ export function RewriteModeSection({ settings, activeMode, onChange }: RewriteMo
         <div>
           <div className="text-xs font-medium text-white/80">Clean Text Instructions</div>
           <div className="text-[10px] text-white/40 mt-0.5">
-            Controls how spoken text is cleaned up before being pasted.
+            Controls how spoken text is cleaned up before being pasted. Editable and saved from this panel.
           </div>
         </div>
         <textarea
@@ -87,7 +91,7 @@ export function RewriteModeSection({ settings, activeMode, onChange }: RewriteMo
         <div>
           <div className="text-xs font-medium text-white/80">AI Prompt Instructions</div>
           <div className="text-[10px] text-white/40 mt-0.5">
-            Long-form rules for how the spoken note should be turned into a structured AI prompt.
+            Long-form rules for how the spoken note should be turned into a structured AI prompt. Editable and saved from this panel.
           </div>
         </div>
         <textarea
@@ -106,6 +110,14 @@ export function RewriteModeSection({ settings, activeMode, onChange }: RewriteMo
           </Button>
         </div>
       </div>
+
+      {onApply && (
+        <div className="flex justify-end pt-1">
+          <Button variant="primary" size="sm" onClick={() => void onApply()}>
+            Save Prompt Rules
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

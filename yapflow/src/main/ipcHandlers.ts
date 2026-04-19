@@ -64,11 +64,17 @@ export class IpcHandlers {
     ipcMain.handle(IPC.TRANSCRIBE_AUDIO, async (_event, payload: TranscribeAudioPayload) => {
       const win = this.windowManager.getWindow()
       win?.webContents.send(IPC.PROCESSING_STATE, 'transcribing')
-
-      const result = await this.openaiClient.transcribeAudio(payload)
-
-      win?.webContents.send(IPC.PROCESSING_STATE, 'transcribing_done')
-      return result
+      try {
+        const result = await this.openaiClient.transcribeAudio(payload)
+        win?.webContents.send(IPC.PROCESSING_STATE, 'transcribing_done')
+        return result
+      } catch (err) {
+        this.logger.logError('ipc:transcribe-audio', err)
+        if (err instanceof Error) {
+          throw new Error(err.stack ?? `${err.name}: ${err.message}`)
+        }
+        throw err
+      }
     })
 
     // ── Rewrite ───────────────────────────────────────────────────────────────
@@ -130,6 +136,33 @@ export class IpcHandlers {
     // Test API key connection
     ipcMain.handle('test-api-connection', async () => {
       return await this.openaiClient.testConnection()
+    })
+
+    // ── Groq API Key ──────────────────────────────────────────────────────────
+    ipcMain.handle('get-groq-api-key-status', () => {
+      return this.settingsStore.getGroqApiKeyStatus()
+    })
+
+    ipcMain.handle('has-groq-api-key', () => {
+      return this.settingsStore.hasGroqApiKey()
+    })
+
+    ipcMain.handle('save-groq-api-key', (_event, key: string) => {
+      this.settingsStore.saveGroqApiKey(key)
+      const hudWin = this.windowManager.getWindow()
+      hudWin?.webContents.send(IPC.API_KEY_CHANGED)
+      return { success: true }
+    })
+
+    ipcMain.handle('clear-groq-api-key', () => {
+      this.settingsStore.clearGroqApiKey()
+      const hudWin = this.windowManager.getWindow()
+      hudWin?.webContents.send(IPC.API_KEY_CHANGED)
+      return { success: true }
+    })
+
+    ipcMain.handle('test-groq-connection', async () => {
+      return await this.openaiClient.testGroqConnection()
     })
 
     // ── History ───────────────────────────────────────────────────────────────

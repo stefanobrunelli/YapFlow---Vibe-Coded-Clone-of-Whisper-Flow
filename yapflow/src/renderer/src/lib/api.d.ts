@@ -27,6 +27,12 @@ declare global {
       saveHistoryEntry(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): Promise<HistoryEntry>
       testApiConnection(): Promise<{ ok: boolean; error?: string }>
 
+      saveGroqApiKey(key: string): Promise<{ success: boolean }>
+      getGroqApiKeyStatus(): Promise<ApiKeyStatus>
+      hasGroqApiKey(): Promise<boolean>
+      clearGroqApiKey(): Promise<{ success: boolean }>
+      testGroqConnection(): Promise<{ ok: boolean; error?: string }>
+
       getSettings(): Promise<AppSettings>
       saveSettings(payload: SaveSettingsPayload): Promise<void>
       hasApiKey(): Promise<boolean>
@@ -55,6 +61,7 @@ declare global {
       saveShortcut(config: ShortcutConfig): Promise<void>
       onShortcutCaptured(cb: (config: ShortcutConfig) => void): () => void
       onApiKeyChanged(cb: () => void): () => void
+      onForceReset(cb: () => void): () => void
 
       openSettingsWindow(): void
       resizeHud(width: number, height: number): void

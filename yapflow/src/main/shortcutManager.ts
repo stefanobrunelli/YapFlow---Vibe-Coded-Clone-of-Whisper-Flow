@@ -19,7 +19,6 @@
 import { IPC } from '../shared/constants'
 import { ShortcutBehavior, ShortcutConfig } from '../shared/types'
 import {
-  formatShortcutKeyCodes,
   normalizeShortcutKeyCode,
   normalizeShortcutKeyCodes,
   withFormattedShortcutDisplay
@@ -49,6 +48,7 @@ export class ShortcutManager {
   private shortcutKeyCodes: Set<number>
   private shortcutBehavior: ShortcutBehavior
   private toggleLatch = false
+  private listenersRegistered = false
 
   // Capture mode state
   private captureMode = false
@@ -66,82 +66,12 @@ export class ShortcutManager {
   }
 
   start(): void {
-    uIOhook.on('keydown', (event: UiohookKeyEvent) => {
-      const normalizedKeyCode = normalizeShortcutKeyCode(event.keycode)
-
-      if (this.captureMode) {
-        this.capturedKeys.add(normalizedKeyCode)
-        // Track the maximum combo (all keys held simultaneously)
-        this.peakCombo = [...this.capturedKeys]
-        return
-      }
-
-      this.heldKeys.add(normalizedKeyCode)
-
-      if (!this.isComboActive()) {
-        return
-      }
-
-      if (this.shortcutBehavior === 'toggle') {
-        if (this.toggleLatch) {
-          return
-        }
-
-        this.toggleLatch = true
-
-        if (this.comboActive) {
-          this.comboActive = false
-          this.onComboEnd()
-        } else {
-          this.comboActive = true
-          this.onComboStart()
-        }
-        return
-      }
-
-      if (!this.comboActive) {
-        this.comboActive = true
-        this.onComboStart()
-      }
-    })
-
-    uIOhook.on('keyup', (event: UiohookKeyEvent) => {
-      const normalizedKeyCode = normalizeShortcutKeyCode(event.keycode)
-
-      if (this.captureMode) {
-        this.capturedKeys.delete(normalizedKeyCode)
-
-        // All keys released and we captured a meaningful combo (2+ keys)
-        if (this.capturedKeys.size === 0 && this.peakCombo.length >= 2) {
-          const config = withFormattedShortcutDisplay({ keyCodes: this.peakCombo, display: '' })
-          this.captureMode = false
-          this.peakCombo = []
-          const win = this.windowManager.getSettingsWindow()
-          win?.webContents.send(IPC.SHORTCUT_CAPTURED, config)
-        }
-        return
-      }
-
-      this.heldKeys.delete(normalizedKeyCode)
-
-      if (this.shortcutBehavior === 'toggle') {
-        if (!this.isComboActive()) {
-          this.toggleLatch = false
-        }
-        return
-      }
-
-      if (
-        this.comboActive &&
-        this.shortcutKeyCodes.has(normalizedKeyCode)
-      ) {
-        // A key that's part of the combo was released — end recording
-        this.comboActive = false
-        this.heldKeys.clear()
-        this.onComboEnd()
-      }
-    })
-
+    // Register listeners only once — re-calling start() after stop() reuses them
+    if (!this.listenersRegistered) {
+      uIOhook.on('keydown', (event: UiohookKeyEvent) => this.handleKeydown(event))
+      uIOhook.on('keyup', (event: UiohookKeyEvent) => this.handleKeyup(event))
+      this.listenersRegistered = true
+    }
     uIOhook.start()
     console.log('[ShortcutManager] Started — listening for shortcut')
   }
@@ -152,6 +82,89 @@ export class ShortcutManager {
       console.log('[ShortcutManager] Stopped')
     } catch (err) {
       console.warn('[ShortcutManager] Error stopping uIOhook:', err)
+    }
+  }
+
+  /**
+   * Restart the native hook and clear all transient key state.
+   * Called after macOS sleep/wake to recover from a dead hook.
+   */
+  restart(): void {
+    console.log('[ShortcutManager] Restarting after wake')
+    try { uIOhook.stop() } catch { /* ignore if already stopped */ }
+    this.resetState()
+    uIOhook.start()
+    console.log('[ShortcutManager] Restarted')
+  }
+
+  /** Clear all transient key/combo state without stopping the hook. */
+  resetState(): void {
+    this.heldKeys.clear()
+    this.comboActive = false
+    this.toggleLatch = false
+    this.captureMode = false
+    this.capturedKeys.clear()
+    this.peakCombo = []
+  }
+
+  private handleKeydown(event: UiohookKeyEvent): void {
+    const normalizedKeyCode = normalizeShortcutKeyCode(event.keycode)
+
+    if (this.captureMode) {
+      this.capturedKeys.add(normalizedKeyCode)
+      this.peakCombo = [...this.capturedKeys]
+      return
+    }
+
+    this.heldKeys.add(normalizedKeyCode)
+
+    if (!this.isComboActive()) return
+
+    if (this.shortcutBehavior === 'toggle') {
+      if (this.toggleLatch) return
+      this.toggleLatch = true
+      if (this.comboActive) {
+        this.comboActive = false
+        this.onComboEnd()
+      } else {
+        this.comboActive = true
+        this.onComboStart()
+      }
+      return
+    }
+
+    if (!this.comboActive) {
+      this.comboActive = true
+      this.onComboStart()
+    }
+  }
+
+  private handleKeyup(event: UiohookKeyEvent): void {
+    const normalizedKeyCode = normalizeShortcutKeyCode(event.keycode)
+
+    if (this.captureMode) {
+      this.capturedKeys.delete(normalizedKeyCode)
+      if (this.capturedKeys.size === 0 && this.peakCombo.length >= 2) {
+        const config = withFormattedShortcutDisplay({ keyCodes: this.peakCombo, display: '' })
+        this.captureMode = false
+        this.peakCombo = []
+        const win = this.windowManager.getSettingsWindow()
+        win?.webContents.send(IPC.SHORTCUT_CAPTURED, config)
+      }
+      return
+    }
+
+    this.heldKeys.delete(normalizedKeyCode)
+
+    if (this.shortcutBehavior === 'toggle') {
+      if (!this.isComboActive()) this.toggleLatch = false
+      return
+    }
+
+    if (this.comboActive && this.shortcutKeyCodes.has(normalizedKeyCode)) {
+      this.comboActive = false
+      this.heldKeys.clear()
+      this.onComboEnd()
     }
   }
 

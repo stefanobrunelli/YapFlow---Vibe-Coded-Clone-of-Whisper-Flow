@@ -16,6 +16,7 @@ export interface ApiKeyStatus {
   maskedKey: string | null
 }
 
+export type ApiProvider = 'openai' | 'groq'
 export type ShortcutBehavior = 'hold' | 'toggle'
 export type AppearanceMode = 'system' | 'light' | 'dark'
 
@@ -90,6 +91,8 @@ export interface HistoryEntry {
   rewrittenText: string
   rewriteMode: RewriteMode
   transcriptionModel: TranscriptionModel
+  transcriptionProvider: ApiProvider
+  rewriteProvider: ApiProvider
   transcriptionLatencyMs: number
   rewriteLatencyMs: number
   transcriptionCost: CostInfo
@@ -110,6 +113,7 @@ export interface TranscribeAudioPayload {
 /** Returned from main to renderer after transcription completes. */
 export interface TranscribeAudioResult {
   transcript: string
+  provider: ApiProvider
   cost: CostInfo
   latencyMs: number
 }
@@ -123,6 +127,7 @@ export interface RewriteTextPayload {
 /** Returned from main to renderer after rewrite completes. */
 export interface RewriteTextResult {
   result: string
+  provider: ApiProvider
   cost: CostInfo
   latencyMs: number
 }

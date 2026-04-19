@@ -45,6 +45,22 @@ const api = {
   testApiConnection: (): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('test-api-connection'),
 
+  // ── Groq API Key ───────────────────────────────────────────────────────────
+  saveGroqApiKey: (key: string): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('save-groq-api-key', key),
+
+  getGroqApiKeyStatus: (): Promise<ApiKeyStatus> =>
+    ipcRenderer.invoke('get-groq-api-key-status'),
+
+  hasGroqApiKey: (): Promise<boolean> =>
+    ipcRenderer.invoke('has-groq-api-key'),
+
+  clearGroqApiKey: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('clear-groq-api-key'),
+
+  testGroqConnection: (): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('test-groq-connection'),
+
   // ── Settings ───────────────────────────────────────────────────────────────
   getSettings: (): Promise<AppSettings> =>
     ipcRenderer.invoke(IPC.GET_SETTINGS),
@@ -136,6 +152,12 @@ const api = {
     const listener = (): void => cb()
     ipcRenderer.on(IPC.API_KEY_CHANGED, listener)
     return () => ipcRenderer.removeListener(IPC.API_KEY_CHANGED, listener)
+  },
+
+  onForceReset: (cb: () => void): (() => void) => {
+    const listener = (): void => cb()
+    ipcRenderer.on(IPC.FORCE_RESET, listener)
+    return () => ipcRenderer.removeListener(IPC.FORCE_RESET, listener)
   },
 
   // ── Window management ──────────────────────────────────────────────────────

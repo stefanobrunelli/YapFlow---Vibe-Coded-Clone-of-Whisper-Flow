@@ -42,7 +42,8 @@ export const IPC = {
   SHORTCUT_CAPTURED: 'shortcut-captured',
   PERMISSION_CHANGED: 'permission-changed',
   PROCESSING_STATE: 'processing-state',
-  API_KEY_CHANGED: 'api-key-changed'
+  API_KEY_CHANGED: 'api-key-changed',
+  FORCE_RESET: 'force-reset'
 } as const
 
 // ─── uiohook-napi Key Codes ───────────────────────────────────────────────────
@@ -67,20 +68,32 @@ export const OPENAI = {
   TRANSCRIPTION_MODEL_PRIMARY: 'gpt-4o-mini-transcribe',
   TRANSCRIPTION_MODEL_FALLBACK: 'whisper-1',
   REWRITE_MODEL: 'gpt-4o-mini',
-  MAX_TOKENS_REWRITE: 1024,
-  TEMPERATURE_REWRITE: 0.3,
+  TEMPERATURE_REWRITE: 0,
   /** Minimum audio duration (ms) before sending to API. Prevents noise. */
   MIN_AUDIO_DURATION_MS: 300
+} as const
+
+// ─── Groq Config ──────────────────────────────────────────────────────────────
+
+export const GROQ = {
+  TRANSCRIPTION_MODEL: 'whisper-large-v3-turbo',
+  REWRITE_MODEL: 'llama-3.3-70b-versatile',
+  TEMPERATURE_REWRITE: 0
 } as const
 
 // ─── Cost Rates (USD per token, approximate as of early 2026) ─────────────────
 
 export const COST_RATES = {
-  // gpt-4o-mini-transcribe: ~$0.003/min, approximated per token
+  // gpt-4o-mini-transcribe: ~$0.003/min
   TRANSCRIPTION_PER_MIN_USD: 0.003,
   // gpt-4o-mini: $0.15 input / $0.60 output per 1M tokens
   GPT4O_MINI_INPUT_PER_TOKEN: 0.00000015,
-  GPT4O_MINI_OUTPUT_PER_TOKEN: 0.0000006
+  GPT4O_MINI_OUTPUT_PER_TOKEN: 0.0000006,
+  // Groq whisper-large-v3-turbo: $0.04/hour = ~$0.000667/min
+  GROQ_TRANSCRIPTION_PER_MIN_USD: 0.000667,
+  // Groq llama-3.3-70b-versatile: $0.59/$0.79 per 1M input/output tokens
+  GROQ_LLAMA_INPUT_PER_TOKEN: 0.00000059,
+  GROQ_LLAMA_OUTPUT_PER_TOKEN: 0.00000079
 } as const
 
 // ─── History Config ───────────────────────────────────────────────────────────

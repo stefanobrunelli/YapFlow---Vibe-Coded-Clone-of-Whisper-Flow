@@ -19,6 +19,7 @@ import { useState } from 'react'
 // ── Settings window ────────────────────────────────────────────────────────────
 
 function SettingsApp() {
+  const { settings, loading } = useSettings()
   const [systemAppearance, setSystemAppearance] = useState<Exclude<AppearanceMode, 'system'>>('dark')
 
   useEffect(() => {
@@ -32,12 +33,18 @@ function SettingsApp() {
   }, [])
 
   useEffect(() => {
-    document.documentElement.dataset.theme = systemAppearance
-    document.documentElement.style.colorScheme = systemAppearance
-  }, [systemAppearance])
+    if (loading) return
+    const resolvedAppearance =
+      settings.appearanceMode === 'system' ? systemAppearance : settings.appearanceMode
+    document.documentElement.dataset.theme = resolvedAppearance
+    document.documentElement.style.colorScheme = resolvedAppearance
+  }, [loading, settings.appearanceMode, systemAppearance])
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden select-none">
+    <div
+      className="h-screen flex flex-col overflow-hidden select-none"
+      style={{ background: 'var(--panel-bg)', backdropFilter: 'blur(24px)' }}
+    >
       <SettingsPage />
     </div>
   )
@@ -47,7 +54,7 @@ function SettingsApp() {
 
 function HudApp() {
   const { state, actions } = useAppState()
-  const { startRecording, stopRecording } = useRecording()
+  const { startRecording, stopRecording, discardRecording } = useRecording()
   const { settings, hasApiKey, loading } = useSettings()
   const [systemAppearance, setSystemAppearance] = useState<Exclude<AppearanceMode, 'system'>>('dark')
 
@@ -80,7 +87,17 @@ function HudApp() {
   // Auto-reset to idle after done/error so the HUD returns to neutral
   useEffect(() => {
     if (state.status !== 'done' && state.status !== 'error') return
-    const timer = setTimeout(() => actions.reset(), 2000)
+    const delay = state.status === 'error' ? 15000 : 2500
+    const timer = setTimeout(() => actions.reset(), delay)
+    return () => clearTimeout(timer)
+  }, [state.status, actions])
+
+  // Watchdog only processing states. Long dictation sessions are valid and
+  // should keep recording until the user explicitly stops them.
+  useEffect(() => {
+    const stuck = state.status === 'transcribing' || state.status === 'rewriting'
+    if (!stuck) return
+    const timer = setTimeout(() => actions.reset(), 60000)
     return () => clearTimeout(timer)
   }, [state.status, actions])
 
@@ -131,6 +148,8 @@ function HudApp() {
         rewrittenText: rewriteResult.result,
         rewriteMode: state.activeMode,
         transcriptionModel: settings.transcriptionModel,
+        transcriptionProvider: transcribeResult.provider,
+        rewriteProvider: rewriteResult.provider,
         transcriptionLatencyMs: transcribeResult.latencyMs,
         rewriteLatencyMs: rewriteResult.latencyMs,
         transcriptionCost: transcribeResult.cost,
@@ -163,10 +182,16 @@ function HudApp() {
     actions
   ])
 
+  const handleForceReset = useCallback(() => {
+    discardRecording()
+    actions.reset()
+  }, [discardRecording, actions])
+
   useIPCListener({
     onShortcutDown: handleShortcutDown,
     onShortcutUp: handleShortcutUp,
-    onPermissionChanged: actions.updatePermissions
+    onPermissionChanged: actions.updatePermissions,
+    onForceReset: handleForceReset
   })
 
   const handleModeChange = useCallback(

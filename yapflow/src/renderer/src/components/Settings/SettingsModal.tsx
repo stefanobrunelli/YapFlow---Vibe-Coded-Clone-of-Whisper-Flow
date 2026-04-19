@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { Dialog } from '@headlessui/react'
 import { ApiKeyStatus, AppSettings, PermissionStatus } from '@shared/types'
 import { ApiKeySection } from './ApiKeySection'
+import { GroqKeySection } from './GroqKeySection'
 import { RewriteModeSection } from './RewriteModeSection'
 import { GeneralSection } from './GeneralSection'
 import { Button } from '../shared/Button'
@@ -103,10 +104,15 @@ export function SettingsModal({
 
             <div className="h-px bg-white/8" />
 
+            <GroqKeySection />
+
+            <div className="h-px bg-white/8" />
+
             <RewriteModeSection
               settings={draft}
               activeMode={draft.rewriteMode}
               onChange={handleChange}
+              onApply={handleApply}
             />
 
             <div className="h-px bg-white/8" />

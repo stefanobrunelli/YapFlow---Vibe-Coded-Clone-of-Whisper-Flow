@@ -21,22 +21,25 @@ export class TrayManager {
     // Use a template image for automatic dark/light mode adaptation on macOS.
     // Template images must be named *Template.png
     const iconPath = app.isPackaged
-      ? join(process.resourcesPath, 'resources/trayIconTemplate.png')
-      : join(__dirname, '../../resources/trayIconTemplate.png')
+      ? join(process.resourcesPath, 'resources/whisperflow_tray_32x32.png')
+      : join(__dirname, '../../resources/whisperflow_tray_32x32.png')
     let icon: Electron.NativeImage
 
     try {
-      icon = nativeImage.createFromPath(iconPath)
-      if (icon.isEmpty()) {
-        // Fallback: create a minimal 16x16 icon programmatically
+      const source = nativeImage.createFromPath(iconPath)
+      if (source.isEmpty()) {
         icon = nativeImage.createEmpty()
+      } else {
+        const buffer = source.resize({ width: 40, height: 40, quality: 'best' }).toPNG()
+        icon = nativeImage.createEmpty()
+        icon.addRepresentation({ scaleFactor: 2.0, buffer })
       }
     } catch {
       icon = nativeImage.createEmpty()
     }
 
     this.tray = new Tray(icon)
-    this.tray.setToolTip('YapFlow')
+    this.tray.setToolTip(app.getName())
     this.updateMenu()
   }
 
@@ -45,7 +48,7 @@ export class TrayManager {
 
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Show YapFlow',
+        label: `Show ${app.getName()}`,
         click: () => this.windowManager.show()
       },
       {
@@ -60,7 +63,7 @@ export class TrayManager {
       },
       { type: 'separator' },
       {
-        label: 'Quit YapFlow',
+        label: `Quit ${app.getName()}`,
         accelerator: 'Command+Q',
         click: () => app.exit(0)
       }

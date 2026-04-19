@@ -10,12 +10,30 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { writeFileSync, appendFileSync, mkdirSync, existsSync } from 'fs'
-import { HistoryEntry } from '../shared/types'
+import { ApiProvider, HistoryEntry } from '../shared/types'
 
 interface LogEntry {
   timestamp: string
   type: string
   [key: string]: unknown
+}
+
+function sanitizeLogData(data?: Record<string, unknown>): Record<string, unknown> {
+  if (!data) return {}
+
+  const sanitized = { ...data }
+
+  if ('type' in sanitized) {
+    sanitized.detailType = sanitized.type
+    delete sanitized.type
+  }
+
+  if ('timestamp' in sanitized) {
+    sanitized.detailTimestamp = sanitized.timestamp
+    delete sanitized.timestamp
+  }
+
+  return sanitized
 }
 
 export class Logger {
@@ -32,9 +50,10 @@ export class Logger {
     }
   }
 
-  logTranscription(entry: Pick<HistoryEntry, 'transcriptionCost' | 'transcriptionLatencyMs' | 'audioDurationMs' | 'transcriptionModel'>): void {
+  logTranscription(entry: Pick<HistoryEntry, 'transcriptionCost' | 'transcriptionLatencyMs' | 'audioDurationMs' | 'transcriptionModel' | 'transcriptionProvider'>): void {
     this.write({
       type: 'transcription',
+      provider: entry.transcriptionProvider,
       model: entry.transcriptionModel,
       audioDurationMs: entry.audioDurationMs,
       latencyMs: entry.transcriptionLatencyMs,
@@ -42,22 +61,43 @@ export class Logger {
     })
   }
 
-  logRewrite(entry: Pick<HistoryEntry, 'rewriteCost' | 'rewriteLatencyMs' | 'rewriteMode'>): void {
+  logRewrite(entry: Pick<HistoryEntry, 'rewriteCost' | 'rewriteLatencyMs' | 'rewriteMode' | 'rewriteProvider'>): void {
     this.write({
       type: 'rewrite',
+      provider: entry.rewriteProvider,
       mode: entry.rewriteMode,
       latencyMs: entry.rewriteLatencyMs,
       cost: entry.rewriteCost
     })
   }
 
+  logProviderFallback(from: ApiProvider, to: ApiProvider, operation: 'transcription' | 'rewrite', reason: string): void {
+    this.write({
+      type: 'provider_fallback',
+      operation,
+      from,
+      to,
+      reason
+    })
+  }
+
   logError(context: string, error: unknown): void {
-    const message = error instanceof Error ? error.message : String(error)
-    this.write({ type: 'error', context, message })
+    if (error instanceof Error) {
+      this.write({
+        type: 'error',
+        context,
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      })
+      return
+    }
+
+    this.write({ type: 'error', context, message: String(error) })
   }
 
   logInfo(message: string, data?: Record<string, unknown>): void {
-    this.write({ type: 'info', message, ...data })
+    this.write({ ...sanitizeLogData(data), type: 'info', message })
   }
 
   private write(data: Omit<LogEntry, 'timestamp'>): void {
@@ -68,7 +108,8 @@ export class Logger {
 
     // Always log to console
     const { type, ...rest } = entry
-    console.log(`[${type.toUpperCase()}]`, JSON.stringify(rest))
+    const consoleType = typeof type === 'string' ? type : 'unknown'
+    console.log(`[${consoleType.toUpperCase()}]`, JSON.stringify(rest))
 
     // In production, also append to file
     if (!this.isDev) {

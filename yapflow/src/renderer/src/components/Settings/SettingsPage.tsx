@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { PermissionStatus, AppSettings } from '@shared/types'
 import { useSettings } from '../../hooks/useSettings'
 import { ApiKeySection } from './ApiKeySection'
+import { GroqKeySection } from './GroqKeySection'
 import { RewriteModeSection } from './RewriteModeSection'
 import { GeneralSection } from './GeneralSection'
 import { Button } from '../shared/Button'
@@ -45,6 +46,17 @@ export function SettingsPage() {
     window.api.checkPermissions().then(setPermissions)
     window.api.getAppVersion().then(setVersion)
   }, [])
+
+  // Apply theme live as the user toggles appearance — before they click Apply
+  useEffect(() => {
+    if (loading) return
+    const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const resolved = draft.appearanceMode === 'system'
+      ? (systemIsDark ? 'dark' : 'light')
+      : draft.appearanceMode
+    document.documentElement.dataset.theme = resolved
+    document.documentElement.style.colorScheme = resolved
+  }, [draft.appearanceMode, loading])
 
   const handleChange = useCallback((partial: Partial<AppSettings>) => {
     setDraft((prev) => ({ ...prev, ...partial }))
@@ -110,12 +122,14 @@ export function SettingsPage() {
         )}
 
         {activeTab === 'api' && (
-          <div className="p-5">
+          <div className="p-5 flex flex-col gap-5">
             <ApiKeySection
               hasApiKey={hasApiKey}
               apiKeyStatus={apiKeyStatus}
               onSave={handleSaveApiKey}
             />
+            <div className="h-px bg-white/8" />
+            <GroqKeySection />
           </div>
         )}
 
@@ -125,6 +139,7 @@ export function SettingsPage() {
               settings={draft}
               activeMode={draft.rewriteMode}
               onChange={handleChange}
+              onApply={handleApply}
             />
           </div>
         )}

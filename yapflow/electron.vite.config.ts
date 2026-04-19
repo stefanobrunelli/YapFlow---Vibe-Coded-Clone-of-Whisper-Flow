@@ -1,24 +1,22 @@
 import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    build: {
+      externalizeDeps: true
+    },
     resolve: {
       alias: {
         '@shared': resolve('src/shared')
       }
-    },
-    build: {
-      rollupOptions: {
-        // uiohook-napi is a native module — must remain external
-        external: ['uiohook-napi', 'electron-store']
-      }
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    build: {
+      externalizeDeps: true
+    }
   },
   renderer: {
     resolve: {

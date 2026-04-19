@@ -1,10 +1,10 @@
-appId: com.yapflow.app
-productName: YapFlow
+appId: ${env.YAPFLOW_APP_ID}
+productName: ${env.YAPFLOW_PRODUCT_NAME}
 copyright: Copyright © 2026
 
 directories:
   buildResources: resources
-  output: releases
+  output: ${env.YAPFLOW_OUTPUT_DIR}
 
 files:
   - out/**/*
@@ -27,15 +27,13 @@ mac:
 
 dmg:
   sign: false
-  title: "YapFlow ${version}"
+  title: "${env.YAPFLOW_PRODUCT_NAME} ${version}"
 
 # afterSign: scripts/notarize.js  # Uncomment when you have Apple notarization credentials
 
 extraResources:
-  - from: resources/trayIconTemplate.png
-    to: resources/trayIconTemplate.png
-  - from: resources/trayIconTemplate@2x.png
-    to: resources/trayIconTemplate@2x.png
+  - from: resources/whisperflow_tray_32x32.png
+    to: resources/whisperflow_tray_32x32.png
 
 asar: true
 asarUnpack:

@@ -10,9 +10,7 @@
  *   settingsStore → windowManager → trayManager → shortcutManager → ipcHandlers
  */
 
-import { app, BrowserWindow } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, powerMonitor } from 'electron'
 import { WindowManager } from './windowManager'
 import { ShortcutManager } from './shortcutManager'
 import { TrayManager } from './trayManager'
@@ -23,6 +21,9 @@ import { HistoryStore } from './historyStore'
 import { OpenAIClient } from './openaiClient'
 import { PermissionChecker } from './permissionChecker'
 import { Logger } from './logger'
+import { configureAppIdentity } from './appIdentity'
+
+configureAppIdentity()
 
 // ─── Single-instance lock ──────────────────────────────────────────────────────
 
@@ -42,13 +43,16 @@ let ipcHandlers: IpcHandlers
 // ─── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {
-  // Set app-level defaults for macOS
-  electronApp.setAppUserModelId('com.yapflow.app')
-
-  // Open DevTools with F12 in development; close on production builds
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+  // Open DevTools with F12 in development
+  if (!app.isPackaged) {
+    app.on('browser-window-created', (_, window) => {
+      window.webContents.on('before-input-event', (_, input) => {
+        if (input.type === 'keyDown' && input.key === 'F12') {
+          window.webContents.openDevTools()
+        }
+      })
+    })
+  }
 
   // Initialize stores first (no UI dependencies)
   const settingsStore = new SettingsStore()
@@ -66,7 +70,7 @@ app.whenReady().then(async () => {
 
   // Create the floating window
   windowManager = new WindowManager()
-  const mainWindow = windowManager.createWindow()
+  windowManager.createWindow()
 
   // Create system tray icon + menu
   trayManager = new TrayManager(windowManager)
@@ -98,6 +102,19 @@ app.whenReady().then(async () => {
   // Second-instance handler — focus our window if user tries to open again
   app.on('second-instance', () => {
     windowManager.show()
+  })
+
+  // macOS sleep/wake: uiohook's native hook dies across sleep cycles.
+  // On suspend, reset transient key state. On resume, restart the hook so
+  // the shortcut works again without needing a manual app restart.
+  powerMonitor.on('suspend', () => {
+    shortcutManager.resetState()
+    // Force the renderer back to idle in case it was mid-recording
+    windowManager.getWindow()?.webContents.send('force-reset')
+  })
+
+  powerMonitor.on('resume', () => {
+    shortcutManager.restart()
   })
 
   app.on('activate', () => {

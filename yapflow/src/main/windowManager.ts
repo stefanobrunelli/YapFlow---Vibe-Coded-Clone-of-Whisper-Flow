@@ -6,21 +6,19 @@
  *   2. Settings — 640×520 full-page settings, standard macOS window
  */
 
-import { BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow, screen } from 'electron'
 import { join } from 'path'
-import { is } from '@electron-toolkit/utils'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
   private settingsWindow: BrowserWindow | null = null
 
   createWindow(): BrowserWindow {
-    // Position at the bottom center of the primary display
     const primaryDisplay = screen.getPrimaryDisplay()
-    const { width: screenW, height: screenH } = primaryDisplay.workAreaSize
-    const winW = 86
-    const winH = 36
-    const x = Math.round((screenW - winW) / 2)
+    const { height: screenH } = primaryDisplay.workAreaSize
+    const winW = 60
+    const winH = 26
+    const x = 24 // 24px from left edge
     const y = screenH - winH - 24 // 24px from bottom
 
     this.window = new BrowserWindow({
@@ -33,9 +31,9 @@ export class WindowManager {
       // macOS floating appearance
       frame: false,
       transparent: true,
-      vibrancy: 'hud', // dark frosted-glass effect
+      backgroundColor: '#00000000',
       visualEffectState: 'active',
-      hasShadow: true,
+      hasShadow: false, // REMOVED to disable macOS filling the background with white
 
       // Always visible over other apps, but as a floating panel
       alwaysOnTop: true,
@@ -56,7 +54,7 @@ export class WindowManager {
     this.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
     // Load the renderer
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
       this.window.loadURL(process.env['ELECTRON_RENDERER_URL'])
       this.window.webContents.openDevTools({ mode: 'detach' })
     } else {
@@ -126,7 +124,7 @@ export class WindowManager {
       }
     })
 
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
       win.loadURL(process.env['ELECTRON_RENDERER_URL'] + '?window=settings')
     } else {
       win.loadFile(join(__dirname, '../renderer/index.html'), {
@@ -205,7 +203,7 @@ export class WindowManager {
     if (!this.window) return
     const bounds = this.window.getBounds()
     
-    const newX = bounds.x + Math.round((bounds.width - width) / 2)
+    const newX = bounds.x // left edge stays fixed; pill expands rightward
     // To keep it pinned to the bottom (y + height = bottomEdge), adjust y
     const newY = bounds.y + (bounds.height - height)
 

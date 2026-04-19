@@ -26,8 +26,9 @@ export function useSettings() {
     await window.api.saveSettings({ settings: newSettings, apiKey })
     setSettings({ ...newSettings, shortcut: withFormattedShortcutDisplay(newSettings.shortcut) })
     if (apiKey !== undefined) {
-      setHasApiKey(apiKey.startsWith('sk-'))
-      setApiKeyStatus(await window.api.getApiKeyStatus())
+      const status = await window.api.getApiKeyStatus()
+      setHasApiKey(status.hasApiKey)
+      setApiKeyStatus(status)
     }
   }, [])
 

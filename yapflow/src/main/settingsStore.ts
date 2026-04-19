@@ -17,7 +17,8 @@ import { ApiKeyStatus, AppSettings, DEFAULT_SETTINGS } from '../shared/types'
 // electron-store schema for type validation
 interface StoreSchema {
   settings: AppSettings
-  encryptedApiKey: string // base64-encoded encrypted bytes
+  encryptedApiKey: string     // base64-encoded encrypted bytes (OpenAI)
+  encryptedGroqApiKey: string // base64-encoded encrypted bytes (Groq)
 }
 
 export class SettingsStore {
@@ -28,7 +29,8 @@ export class SettingsStore {
       name: 'config',
       defaults: {
         settings: DEFAULT_SETTINGS,
-        encryptedApiKey: ''
+        encryptedApiKey: '',
+        encryptedGroqApiKey: ''
       }
     })
   }
@@ -85,24 +87,80 @@ export class SettingsStore {
   }
 
   hasApiKey(): boolean {
-    const key = this.getApiKey()
-    return key !== null && key.startsWith('sk-')
+    const openaiKey = this.getApiKey()
+    const groqKey = this.getGroqApiKey()
+    return (openaiKey !== null && openaiKey.startsWith('sk-')) ||
+           (groqKey !== null && groqKey.startsWith('gsk_'))
   }
 
   getApiKeyStatus(): ApiKeyStatus {
-    const key = this.getApiKey()
-    if (!key || !key.startsWith('sk-')) {
-      return { hasApiKey: false, maskedKey: null }
+    const openaiKey = this.getApiKey()
+    if (openaiKey && openaiKey.startsWith('sk-')) {
+      return {
+        hasApiKey: true,
+        maskedKey: `${openaiKey.slice(0, 7)}...${openaiKey.slice(-4)}`
+      }
     }
-
-    const suffix = key.slice(-4)
-    return {
-      hasApiKey: true,
-      maskedKey: `${key.slice(0, 7)}...${suffix}`
+    const groqKey = this.getGroqApiKey()
+    if (groqKey && groqKey.startsWith('gsk_')) {
+      return {
+        hasApiKey: true,
+        maskedKey: `${groqKey.slice(0, 8)}...${groqKey.slice(-4)}`
+      }
     }
+    return { hasApiKey: false, maskedKey: null }
   }
 
   clearApiKey(): void {
     this.store.set('encryptedApiKey', '')
+  }
+
+  // ─── Groq API Key (safeStorage) ────────────────────────────────────────────
+
+  saveGroqApiKey(key: string): void {
+    if (!safeStorage.isEncryptionAvailable()) {
+      console.warn('[SettingsStore] safeStorage not available — storing Groq key in plaintext (dev only)')
+      this.store.set('encryptedGroqApiKey', Buffer.from(key).toString('base64'))
+      return
+    }
+    const encrypted = safeStorage.encryptString(key)
+    this.store.set('encryptedGroqApiKey', encrypted.toString('base64'))
+  }
+
+  getGroqApiKey(): string | null {
+    const encoded = this.store.get('encryptedGroqApiKey', '')
+    if (!encoded) return null
+
+    try {
+      if (!safeStorage.isEncryptionAvailable()) {
+        return Buffer.from(encoded, 'base64').toString('utf-8')
+      }
+      const buffer = Buffer.from(encoded, 'base64')
+      return safeStorage.decryptString(buffer)
+    } catch (err) {
+      console.error('[SettingsStore] Failed to decrypt Groq API key:', err)
+      return null
+    }
+  }
+
+  hasGroqApiKey(): boolean {
+    const key = this.getGroqApiKey()
+    return key !== null && key.startsWith('gsk_')
+  }
+
+  getGroqApiKeyStatus(): ApiKeyStatus {
+    const key = this.getGroqApiKey()
+    if (!key || !key.startsWith('gsk_')) {
+      return { hasApiKey: false, maskedKey: null }
+    }
+    const suffix = key.slice(-4)
+    return {
+      hasApiKey: true,
+      maskedKey: `${key.slice(0, 8)}...${suffix}`
+    }
+  }
+
+  clearGroqApiKey(): void {
+    this.store.set('encryptedGroqApiKey', '')
   }
 }
