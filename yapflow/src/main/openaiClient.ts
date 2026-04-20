@@ -365,6 +365,10 @@ export class OpenAIClient {
     let transcript: string
     try {
       transcript = extractTranscriptText(response)
+      const normalized = transcript.replace(/[^a-zA-Z]/g, '').toLowerCase()
+      if (normalized === 'thankyou' || normalized === 'thankyouforwatching' || normalized === 'bye' || transcript.trim() === '') {
+        transcript = ''
+      }
     } catch (err) {
       this.logger.logInfo('Unexpected transcription response shape', {
         provider: providerUsed,
@@ -400,6 +404,16 @@ export class OpenAIClient {
   // ─── Rewrite ────────────────────────────────────────────────────────────────
 
   async rewriteText(payload: RewriteTextPayload): Promise<RewriteTextResult> {
+    // Short circuit if there's no text (e.g. filtered hallucination)
+    if (!payload.text || payload.text.trim() === '') {
+      return {
+        result: '',
+        provider: this.resolveRewriteTarget(),
+        cost: { inputTokens: 0, outputTokens: 0, totalTokens: 0, estimatedCostUsd: 0 },
+        latencyMs: 0
+      }
+    }
+
     // Raw mode: skip the GPT call entirely — return as-is for free
     if (payload.mode === 'raw') {
       return {

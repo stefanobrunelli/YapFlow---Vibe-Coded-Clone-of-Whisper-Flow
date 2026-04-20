@@ -69,7 +69,7 @@ app.whenReady().then(async () => {
   }
 
   // Create the floating window
-  windowManager = new WindowManager()
+  windowManager = new WindowManager(settingsStore)
   windowManager.createWindow()
 
   // Create system tray icon + menu

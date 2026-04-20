@@ -22,7 +22,7 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isRecording = status === 'recording' || status === 'transcribing' || status === 'rewriting'
-  const isExpanded = isHovered || isRecording || status === 'error' || status === 'done'
+  const isExpanded = isHovered || isRecording || status === 'error'
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) {
@@ -51,7 +51,7 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
       targetWidth = 72
       targetHeight = 42
     } else if (isHovered) {
-      targetWidth = 192
+      targetWidth = 210
       targetHeight = 46
     }
 
@@ -84,14 +84,14 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
       onMouseLeave={handleMouseLeave}
     >
       <div
-        className={`drag-region flex items-center justify-center transition-all duration-300 ease-in-out ring-0 outline-none shadow-[0_4px_14px_rgba(0,0,0,0.6)] ${
+        className={`drag-region flex items-center justify-center transition-all duration-300 ease-in-out ring-0 outline-none ${
           isExpanded 
             ? !hasApiKey 
-                ? 'w-[180px] h-[34px] rounded-full bg-red-500 border border-red-300' 
+                ? 'w-[200px] h-[34px] rounded-full bg-red-500 border border-red-300' 
                 : status === 'error'
                   ? 'w-[264px] min-h-[100px] rounded-[22px] backdrop-blur-md bg-[#4a4a4d]/95 border-[0.5px] border-white/60 px-2 py-2'
-                  : 'w-[180px] h-[34px] rounded-full backdrop-blur-md bg-[#4a4a4d]/95 border-[0.5px] border-white/60' 
-            : 'w-[48px] h-[14px] rounded-full border-[0.5px] border-white/80 bg-[#1c1c1e]'
+                  : 'w-[200px] h-[34px] rounded-full backdrop-blur-md bg-[#4a4a4d]/95 border-[0.5px] border-white/60' 
+            : 'w-[48px] h-[14px] rounded-full border border-white/80 bg-[#1c1c1e]/80'
         }`}
       >
         {isExpanded ? (
@@ -115,7 +115,7 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
               </div>
             ) : status === 'done' ? (
               <div className="flex items-center w-full justify-center no-drag px-1">
-                <span className="text-[11px] text-green-400 font-medium tracking-wide">✓ Set</span>
+                <span className="text-[14px] text-green-400 font-bold tracking-wide">✓</span>
               </div>
             ) : isRecording ? (
                <div className="flex items-center justify-center w-full h-full">
@@ -132,13 +132,13 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
                 </button>
               </div>
             ) : (
-              <div className="flex items-center w-full justify-between no-drag gap-0.5">
+              <div className="flex items-center w-full justify-between gap-1 px-1.5">
                  {MODES.map((mode) => (
                    <button
                      key={mode.value}
                      onClick={() => onModeChange(mode.value)}
                      className={`
-                       px-3 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-150 cursor-pointer text-center flex-1
+                       no-drag px-3 py-1.5 rounded-[12px] text-xs font-semibold transition-all duration-150 cursor-pointer text-center flex-1
                        ${
                          activeMode === mode.value
                            ? 'bg-black/50 text-[#fdfdfd] shadow-md'
@@ -152,6 +152,8 @@ export function FloatingWindow({ state, activeMode, onModeChange, hasApiKey }: F
               </div>
             )}
           </div>
+        ) : status === 'done' ? (
+          <span className="text-[10px] text-green-400 font-bold leading-none flex items-center justify-center h-full">✓</span>
         ) : null}
       </div>
     </div>

@@ -8,18 +8,28 @@
 
 import { app, BrowserWindow, screen } from 'electron'
 import { join } from 'path'
+import type { SettingsStore } from './settingsStore'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
   private settingsWindow: BrowserWindow | null = null
+  private settingsStore: SettingsStore
+
+  constructor(settingsStore: SettingsStore) {
+    this.settingsStore = settingsStore
+  }
 
   createWindow(): BrowserWindow {
     const primaryDisplay = screen.getPrimaryDisplay()
     const { height: screenH } = primaryDisplay.workAreaSize
     const winW = 60
     const winH = 26
-    const x = 24 // 24px from left edge
-    const y = screenH - winH - 24 // 24px from bottom
+    const settings = this.settingsStore.getSettings()
+    
+    // hudPosition.y represents the bottom edge of the window
+    const x = settings.hudPosition?.x ?? 24
+    const bottomY = settings.hudPosition?.y ?? (screenH - 24)
+    const y = bottomY - winH
 
     this.window = new BrowserWindow({
       width: winW,
@@ -73,6 +83,19 @@ export class WindowManager {
     this.window.on('close', (e) => {
       e.preventDefault()
       this.window?.hide()
+    })
+
+    this.window.on('moved', () => {
+      if (!this.window) return
+      const bounds = this.window.getBounds()
+      const currentSettings = this.settingsStore.getSettings()
+      this.settingsStore.saveSettings({
+        ...currentSettings,
+        hudPosition: { 
+          x: bounds.x, 
+          y: bounds.y + bounds.height 
+        }
+      })
     })
 
     return this.window

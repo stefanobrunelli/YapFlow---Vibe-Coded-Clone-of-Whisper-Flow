@@ -55,6 +55,7 @@ export interface AppSettings {
   shortcut: ShortcutConfig
   shortcutBehavior: ShortcutBehavior
   appearanceMode: AppearanceMode
+  hudPosition?: { x: number; y: number }
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
