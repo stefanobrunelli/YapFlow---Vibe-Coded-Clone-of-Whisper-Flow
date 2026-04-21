@@ -30,7 +30,7 @@ export class TrayManager {
       if (source.isEmpty()) {
         icon = nativeImage.createEmpty()
       } else {
-        const buffer = source.resize({ width: 40, height: 40, quality: 'best' }).toPNG()
+        const buffer = source.resize({ width: 46, height: 46, quality: 'best' }).toPNG()
         icon = nativeImage.createEmpty()
         icon.addRepresentation({ scaleFactor: 2.0, buffer })
       }

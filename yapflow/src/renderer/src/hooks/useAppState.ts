@@ -8,7 +8,7 @@
  */
 
 import { useReducer, useCallback } from 'react'
-import { AppState, AppStatus, CostInfo, RewriteMode, HistoryEntry, PermissionStatus } from '../../../shared/types'
+import { AppState, CostInfo, RewriteMode, HistoryEntry, PermissionStatus } from '../../../shared/types'
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
 

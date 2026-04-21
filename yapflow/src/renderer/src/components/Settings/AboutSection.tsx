@@ -18,8 +18,8 @@ const MODES = [
 ]
 
 const STEPS = [
-  <>Get an OpenAI API key at <button className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 cursor-pointer transition-colors" onClick={() => window.api.openExternal('https://platform.openai.com/api-keys')}>platform.openai.com</button></>,
-  <>Paste it in the <span className="text-white/75 font-medium">API Key</span> tab above</>,
+  <>Get your preferred API keys (OpenAI or Groq)</>,
+  <>Paste them in the respective tabs above</>,
   <>Hold <span className="font-mono text-white/75">⌘⌥Space</span>, speak, then release — text lands in your clipboard</>,
   <>Enable <span className="text-white/75 font-medium">Auto-Paste</span> in Settings to type directly into any app</>
 ]
@@ -58,6 +58,9 @@ export function AboutSection({ version }: AboutSectionProps) {
               <p className="text-[11px] text-white/55 leading-relaxed">{step}</p>
             </div>
           ))}
+          <div className="mt-1 p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-white/60 leading-relaxed">
+            <span className="text-indigo-300 font-medium">Dual API Setup:</span> We recommend adding both keys. <strong>Groq</strong> is completely free and lightning-fast, but has strict daily limits. <strong>OpenAI</strong> is your reliable, unlimited default fallback for when Groq limits are hit seamlessly in the background.
+          </div>
         </div>
       </div>
 
@@ -82,7 +85,7 @@ export function AboutSection({ version }: AboutSectionProps) {
       <div className="flex items-start gap-2 bg-white/4 border border-white/8 rounded-lg px-3 py-2.5">
         <span className="text-[10px] text-white/30 leading-relaxed">
           <span className="text-white/50 font-medium">Privacy — </span>
-          Audio is sent to OpenAI for transcription only. Nothing is stored on any external server. Your API key is encrypted in the system keychain.
+          Audio is sent to OpenAI or Groq for transcription only. Nothing is stored on any external server. Your API keys are encrypted in the system keychain.
         </span>
       </div>
 

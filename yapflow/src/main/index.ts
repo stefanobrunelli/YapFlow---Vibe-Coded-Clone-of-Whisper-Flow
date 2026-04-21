@@ -117,6 +117,17 @@ app.whenReady().then(async () => {
     shortcutManager.restart()
   })
 
+  // Screen lock/unlock is separate from sleep on macOS (e.g. hot corner, Ctrl⌘Q).
+  // The hook dies on lock too, so restart it the same way.
+  powerMonitor.on('lock-screen', () => {
+    shortcutManager.resetState()
+    windowManager.getWindow()?.webContents.send('force-reset')
+  })
+
+  powerMonitor.on('unlock-screen', () => {
+    shortcutManager.restart()
+  })
+
   app.on('activate', () => {
     // macOS: re-create window if Dock icon is clicked and no windows open
     if (BrowserWindow.getAllWindows().length === 0) {

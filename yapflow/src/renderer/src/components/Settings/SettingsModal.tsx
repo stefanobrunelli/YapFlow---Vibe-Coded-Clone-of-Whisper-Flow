@@ -44,7 +44,7 @@ export function SettingsModal({
     if (!isOpen) return
     setDraft(settings)
     if (!version) window.api.getAppVersion().then(setVersion)
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   const handleChange = useCallback((partial: Partial<AppSettings>) => {
     setDraft((prev) => ({ ...prev, ...partial }))

@@ -156,6 +156,16 @@ export function GeneralSection({ settings, permissions, onChange }: GeneralSecti
         </div>
       </div>
 
+      {/* Draggable UI Info */}
+      <div className="flex items-center justify-between">
+        <div className="flex-1 pr-4">
+          <div className="text-xs font-medium text-white/80">Custom Positioning</div>
+          <div className="text-[10px] text-white/40 mt-0.5 leading-relaxed">
+            The main recording pill defaults to the bottom-left of your screen, but it can be dragged anywhere. It will securely remember your preferred location across app restarts. To move it, simply click and drag any gray area of the pill.
+          </div>
+        </div>
+      </div>
+
       {/* Global shortcut */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">

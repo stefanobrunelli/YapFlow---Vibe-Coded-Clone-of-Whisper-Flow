@@ -81,14 +81,17 @@ export class IpcHandlers {
     ipcMain.handle(IPC.REWRITE_TEXT, async (_event, payload: RewriteTextPayload) => {
       const win = this.windowManager.getWindow()
       win?.webContents.send(IPC.PROCESSING_STATE, 'rewriting')
-
-      const result = await this.openaiClient.rewriteText(payload)
-
-      // After both steps complete, save to history
-      // (The renderer sends both calls sequentially; the history entry is
-      // assembled here in the main process where we have all the data.)
-      win?.webContents.send(IPC.PROCESSING_STATE, 'done')
-      return result
+      try {
+        const result = await this.openaiClient.rewriteText(payload)
+        win?.webContents.send(IPC.PROCESSING_STATE, 'done')
+        return result
+      } catch (err) {
+        this.logger.logError('ipc:rewrite-text', err)
+        if (err instanceof Error) {
+          throw new Error(err.stack ?? `${err.name}: ${err.message}`)
+        }
+        throw err
+      }
     })
 
     // ── History entry creation (called by renderer after rewrite) ─────────────
@@ -203,9 +206,13 @@ export class IpcHandlers {
 
     // ── Utility ───────────────────────────────────────────────────────────────
     ipcMain.handle(IPC.OPEN_EXTERNAL, (_event, url: string) => {
-      // Validate URL to prevent arbitrary URL opening
-      if (url.startsWith('https://') || url.startsWith('x-apple.systempreferences:')) {
-        shell.openExternal(url)
+      try {
+        const parsed = new URL(url)
+        if (parsed.protocol === 'https:' || parsed.protocol === 'x-apple.systempreferences:') {
+          shell.openExternal(url)
+        }
+      } catch {
+        this.logger.logError('ipc:open-external', new Error(`Invalid URL: ${url}`))
       }
       return { success: true }
     })

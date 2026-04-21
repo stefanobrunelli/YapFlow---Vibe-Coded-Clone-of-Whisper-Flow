@@ -94,6 +94,22 @@ function isGroqLimitError(err: unknown): boolean {
   return false
 }
 
+function isConnectionError(err: unknown): boolean {
+  const details = getErrorDetails(err)
+  // APIConnectionError from openai-node / groq-sdk has no HTTP status code
+  if (typeof details.status === 'number') return false
+  const message = String(details.message ?? '').toLowerCase()
+  const name = String(details.name ?? '').toLowerCase()
+  return (
+    name.includes('apiconnection') ||
+    message.includes('connection error') ||
+    message.includes('fetch failed') ||
+    message.includes('econnreset') ||
+    message.includes('enotfound') ||
+    message.includes('network')
+  )
+}
+
 function isGroqShortAudioError(err: unknown): boolean {
   const details = getErrorDetails(err)
   const status = typeof details.status === 'number' ? details.status : undefined
@@ -196,6 +212,20 @@ export class OpenAIClient {
 
   private clearGroqTemporaryDisable(): void {
     this.groqDisabledUntil = null
+  }
+
+  // Retry once on connection errors — handles stale keep-alive sockets after sleep/wake
+  private async requestWithRetry<T>(fn: () => Promise<T>, delayMs = 800): Promise<T> {
+    try {
+      return await fn()
+    } catch (err) {
+      if (isConnectionError(err)) {
+        console.warn(`[OpenAIClient] Connection error, retrying after ${delayMs}ms`)
+        await new Promise(r => setTimeout(r, delayMs))
+        return await fn()
+      }
+      throw err
+    }
   }
 
   private resolveTranscriptionTarget(settings: ReturnType<SettingsStore['getSettings']>): {
@@ -324,7 +354,7 @@ export class OpenAIClient {
     let providerUsed = target.provider
     try {
       try {
-        response = await this.requestTranscription(target.provider, settings, tmpPath)
+        response = await this.requestWithRetry(() => this.requestTranscription(target.provider, settings, tmpPath))
         if (target.provider === 'groq') {
           this.clearGroqTemporaryDisable()
         }
@@ -332,7 +362,7 @@ export class OpenAIClient {
         const shouldFallbackFromGroq =
           target.provider === 'groq' &&
           this.hasOpenAIKey() &&
-          (isGroqLimitError(err) || isGroqShortAudioError(err))
+          (isGroqLimitError(err) || isGroqShortAudioError(err) || isConnectionError(err))
 
         if (shouldFallbackFromGroq) {
           if (isGroqLimitError(err)) {
@@ -345,7 +375,7 @@ export class OpenAIClient {
             'transcription',
             String(getErrorDetails(err).message ?? 'Groq transcription fallback triggered')
           )
-          response = await this.requestTranscription('openai', settings, tmpPath)
+          response = await this.requestWithRetry(() => this.requestTranscription('openai', settings, tmpPath))
         } else {
           throw err
         }
@@ -359,7 +389,9 @@ export class OpenAIClient {
       this.logger.logError('transcribeAudio', err)
       throw formatApiError('transcription', providerUsed, err)
     } finally {
-      await unlink(tmpPath).catch(() => {})
+      await unlink(tmpPath).catch((err) => {
+        console.warn(`[OpenAIClient] Failed to clean up temp file ${tmpPath}:`, err)
+      })
     }
 
     let transcript: string
@@ -438,16 +470,23 @@ export class OpenAIClient {
     let providerUsed = targetProvider
     try {
       try {
-        response = await this.requestRewrite(targetProvider, rewritePayload, systemPrompt)
+        response = await this.requestWithRetry(() => this.requestRewrite(targetProvider, rewritePayload, systemPrompt))
         if (targetProvider === 'groq') {
           this.clearGroqTemporaryDisable()
         }
       } catch (err) {
-        if (targetProvider === 'groq' && this.hasOpenAIKey() && isGroqLimitError(err)) {
-          this.markGroqTemporarilyDisabled()
+        const shouldFallbackFromGroq =
+          targetProvider === 'groq' &&
+          this.hasOpenAIKey() &&
+          (isGroqLimitError(err) || isConnectionError(err))
+
+        if (shouldFallbackFromGroq) {
+          if (isGroqLimitError(err)) {
+            this.markGroqTemporarilyDisabled()
+          }
           providerUsed = 'openai'
           this.logger.logProviderFallback('groq', 'openai', 'rewrite', String(getErrorDetails(err).message ?? 'Groq quota or rate limit reached'))
-          response = await this.requestRewrite('openai', rewritePayload, systemPrompt)
+          response = await this.requestWithRetry(() => this.requestRewrite('openai', rewritePayload, systemPrompt))
         } else {
           throw err
         }

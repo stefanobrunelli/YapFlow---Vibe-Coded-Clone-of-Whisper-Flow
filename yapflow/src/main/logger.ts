@@ -9,7 +9,7 @@
 
 import { app } from 'electron'
 import { join } from 'path'
-import { writeFileSync, appendFileSync, mkdirSync, existsSync } from 'fs'
+import { appendFileSync, mkdirSync } from 'fs'
 import { ApiProvider, HistoryEntry } from '../shared/types'
 
 interface LogEntry {
@@ -109,7 +109,13 @@ export class Logger {
     // Always log to console
     const { type, ...rest } = entry
     const consoleType = typeof type === 'string' ? type : 'unknown'
-    console.log(`[${consoleType.toUpperCase()}]`, JSON.stringify(rest))
+    let serialized: string
+    try {
+      serialized = JSON.stringify(rest)
+    } catch {
+      serialized = '[unserializable]'
+    }
+    console.log(`[${consoleType.toUpperCase()}]`, serialized)
 
     // In production, also append to file
     if (!this.isDev) {

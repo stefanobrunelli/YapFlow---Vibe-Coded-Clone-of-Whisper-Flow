@@ -27,7 +27,7 @@ import { WindowManager } from './windowManager'
 
 // uiohook-napi is a native module — imported at runtime to avoid
 // build-time issues when the native binary isn't yet compiled.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { uIOhook } = require('uiohook-napi') as {
   uIOhook: {
     start: () => void
@@ -55,6 +55,12 @@ export class ShortcutManager {
   private capturedKeys = new Set<number>() // keys currently held during capture
   private peakCombo: number[] = []         // max combo held at once during capture
 
+  // Sleep/wake recovery: pending delayed restart timers
+  private pendingRestarts: ReturnType<typeof setTimeout>[] = []
+  // Watchdog: periodic hook refresh to recover from silent hook death
+  private watchdogTimer: ReturnType<typeof setInterval> | null = null
+  private static readonly WATCHDOG_INTERVAL_MS = 20 * 60 * 1000 // 20 minutes
+
   constructor(
     windowManager: WindowManager,
     initialShortcut: ShortcutConfig,
@@ -73,10 +79,14 @@ export class ShortcutManager {
       this.listenersRegistered = true
     }
     uIOhook.start()
+    this.startWatchdog()
     console.log('[ShortcutManager] Started — listening for shortcut')
   }
 
   stop(): void {
+    this.stopWatchdog()
+    this.pendingRestarts.forEach(t => clearTimeout(t))
+    this.pendingRestarts = []
     try {
       uIOhook.stop()
       console.log('[ShortcutManager] Stopped')
@@ -86,15 +96,51 @@ export class ShortcutManager {
   }
 
   /**
-   * Restart the native hook and clear all transient key state.
-   * Called after macOS sleep/wake to recover from a dead hook.
+   * Restart the native hook after macOS sleep/wake or screen unlock.
+   *
+   * macOS needs time post-wake before it re-grants Input Monitoring access to
+   * the native hook. A single immediate call reliably fails. We schedule four
+   * attempts at increasing delays so at least one lands in the ready window.
+   * Any in-flight retry chain is cancelled before starting a new one.
    */
   restart(): void {
-    console.log('[ShortcutManager] Restarting after wake')
-    try { uIOhook.stop() } catch { /* ignore if already stopped */ }
+    console.log('[ShortcutManager] Scheduling restart after wake/unlock')
+    this.pendingRestarts.forEach(t => clearTimeout(t))
+    this.pendingRestarts = []
     this.resetState()
-    uIOhook.start()
-    console.log('[ShortcutManager] Restarted')
+
+    const delays = [100, 1000, 3500, 8000]
+    delays.forEach(delay => {
+      const t = setTimeout(() => {
+        try { uIOhook.stop() } catch { /* already stopped */ }
+        try {
+          uIOhook.start()
+          console.log(`[ShortcutManager] Hook restarted at +${delay}ms`)
+        } catch (err) {
+          console.warn(`[ShortcutManager] Restart failed at +${delay}ms:`, err)
+        }
+      }, delay)
+      this.pendingRestarts.push(t)
+    })
+  }
+
+  private startWatchdog(): void {
+    this.stopWatchdog()
+    this.watchdogTimer = setInterval(() => {
+      console.log('[ShortcutManager] Watchdog: refreshing hook')
+      try { uIOhook.stop() } catch { /* ignore */ }
+      this.resetState()
+      try { uIOhook.start() } catch (err) {
+        console.warn('[ShortcutManager] Watchdog restart failed:', err)
+      }
+    }, ShortcutManager.WATCHDOG_INTERVAL_MS)
+  }
+
+  private stopWatchdog(): void {
+    if (this.watchdogTimer) {
+      clearInterval(this.watchdogTimer)
+      this.watchdogTimer = null
+    }
   }
 
   /** Clear all transient key/combo state without stopping the hook. */

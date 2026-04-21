@@ -4,8 +4,8 @@
   "description": "Voice-to-prompt macOS desktop app — lightweight Wispr Flow alternative",
   "main": "./out/main/index.js",
   "author": {
-    "name": "Your Name",
-    "email": "your@email.com"
+    "name": "Stefano Brunelli",
+    "email": "stefanobrunellis@gmail.com"
   },
   "homepage": ".",
   "scripts": {

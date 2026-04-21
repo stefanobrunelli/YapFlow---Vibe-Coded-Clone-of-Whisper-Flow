@@ -85,26 +85,26 @@ export function SettingsPage() {
   return (
     <div className="drag-region flex flex-col h-full overflow-hidden rounded-xl">
       {/* Title bar with traffic light spacer */}
-      <div className="flex items-center px-4 pt-4 pb-3 border-b border-white/8 shrink-0">
+      <div className="flex items-center px-4 pt-5 pb-4 border-b border-white/8 shrink-0">
         <div className="w-16" /> {/* traffic light spacer */}
-        <span className="text-sm font-semibold text-white/90 flex-1 text-center">Settings</span>
+        <span className="text-[15px] font-semibold text-white/90 flex-1 text-center">YapFlow Settings</span>
         {version && (
-          <span className="text-[10px] text-white/25 w-16 text-right">v{version}</span>
+          <span className="text-[11px] text-white/25 w-16 text-right">v{version}</span>
         )}
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-white/8 no-drag shrink-0">
+      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-white/8 no-drag shrink-0">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`
-              px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150 cursor-pointer
+              px-3.5 py-2 rounded-md text-[13px] font-medium transition-all duration-150 cursor-pointer
               ${
                 activeTab === tab.id
                   ? 'bg-white/15 text-white'
-                  : 'text-white/45 hover:text-white/70 hover:bg-white/8'
+                  : 'text-white/58 hover:text-white/70 hover:bg-white/8'
               }
             `}
           >
@@ -116,13 +116,13 @@ export function SettingsPage() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto no-drag">
         {activeTab === 'about' && (
-          <div className="p-5">
+          <div className="p-6">
             <AboutSection version={version} />
           </div>
         )}
 
         {activeTab === 'api' && (
-          <div className="p-5 flex flex-col gap-5">
+          <div className="p-6 flex flex-col gap-5">
             <ApiKeySection
               hasApiKey={hasApiKey}
               apiKeyStatus={apiKeyStatus}
@@ -134,7 +134,7 @@ export function SettingsPage() {
         )}
 
         {activeTab === 'modes' && (
-          <div className="p-5">
+          <div className="p-6">
             <RewriteModeSection
               settings={draft}
               activeMode={draft.rewriteMode}
@@ -145,7 +145,7 @@ export function SettingsPage() {
         )}
 
         {activeTab === 'general' && (
-          <div className="p-5">
+          <div className="p-6">
             <GeneralSection
               settings={draft}
               permissions={permissions}
@@ -159,7 +159,7 @@ export function SettingsPage() {
 
       {/* Footer — only show Apply for non-history, non-api, non-about tabs */}
       {activeTab !== 'api' && activeTab !== 'history' && activeTab !== 'about' && (
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-white/8 shrink-0 no-drag">
+        <div className="flex items-center justify-end gap-2 px-6 py-3.5 border-t border-white/8 shrink-0 no-drag">
           <Button variant="ghost" size="sm" onClick={() => setDraft(settings)}>
             Reset
           </Button>
@@ -170,7 +170,7 @@ export function SettingsPage() {
       )}
 
       {activeTab === 'history' && (
-        <div className="flex items-center px-5 py-3 border-t border-white/8 shrink-0 no-drag">
+        <div className="flex items-center px-6 py-3.5 border-t border-white/8 shrink-0 no-drag">
           <Button
             variant="danger"
             size="sm"
@@ -222,7 +222,7 @@ function HistoryTab() {
   }
 
   return (
-    <div className="p-3 flex flex-col gap-2">
+    <div className="p-4 flex flex-col gap-2">
       {entries.map((entry) => (
         <HistoryItem key={entry.id} entry={entry} onDelete={handleDelete} />
       ))}

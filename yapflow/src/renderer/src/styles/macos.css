@@ -222,3 +222,8 @@
 :root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.28);
 }
+
+/* Dark mode: boost minimum text contrast for accessibility */
+:root:not([data-theme='light']) .text-white\/20 { color: rgba(255, 255, 255, 0.35) !important; }
+:root:not([data-theme='light']) .text-white\/25 { color: rgba(255, 255, 255, 0.42) !important; }
+:root:not([data-theme='light']) .text-white\/35 { color: rgba(255, 255, 255, 0.52) !important; }
