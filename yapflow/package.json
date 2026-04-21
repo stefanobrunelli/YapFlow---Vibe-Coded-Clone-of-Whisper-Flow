@@ -1,6 +1,6 @@
 {
   "name": "yapflow",
-  "version": "0.2.0",
+  "version": "2.0.0",
   "description": "Voice-to-prompt macOS desktop app — lightweight Wispr Flow alternative",
   "main": "./out/main/index.js",
   "author": {
