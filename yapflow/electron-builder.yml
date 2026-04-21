@@ -1,5 +1,5 @@
-appId: ${env.YAPFLOW_APP_ID}
-productName: ${env.YAPFLOW_PRODUCT_NAME}
+appId: com.yapflow.app
+productName: YapFlow
 copyright: Copyright © 2026
 
 directories:
@@ -17,6 +17,7 @@ mac:
   gatekeeperAssess: false
   entitlements: resources/entitlements.mac.plist
   entitlementsInherit: resources/entitlements.mac.plist
+  artifactName: "${productName}-${version}-${arch}.${ext}"
   target:
     - target: dmg
       arch:
@@ -27,7 +28,7 @@ mac:
 
 dmg:
   sign: false
-  title: "${env.YAPFLOW_PRODUCT_NAME} ${version}"
+  title: "${productName} ${version}"
 
 # afterSign: scripts/notarize.js  # Uncomment when you have Apple notarization credentials
 
