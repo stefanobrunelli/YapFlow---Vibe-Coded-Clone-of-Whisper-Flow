@@ -13,7 +13,10 @@ files:
 mac:
   category: public.app-category.productivity
   icon: resources/icon.icns
-  hardenedRuntime: true
+  # Keep the distribution plainly unsigned for shareable friend installs.
+  # Users will still need to manually allow the app in macOS on first launch.
+  identity: null
+  hardenedRuntime: false
   gatekeeperAssess: false
   entitlements: resources/entitlements.mac.plist
   entitlementsInherit: resources/entitlements.mac.plist
@@ -42,6 +45,13 @@ asarUnpack:
   # that cannot run from inside an asar archive
   - "node_modules/uiohook-napi/**/*"
   - "node_modules/uiohook-napi/prebuilds/**/*"
+  # uiohook-napi loads its native binary through node-gyp-build at runtime,
+  # so the helper package must be available from the unpacked module tree too.
+  - "node_modules/node-gyp-build/**/*"
+  # utilityProcess child entry — unpack so utilityProcess.fork() gets a
+  # real filesystem path (utilityProcess fork from inside asar has been
+  # flaky across Electron versions; unpacking sidesteps the question).
+  - "out/main/hookChild.js"
 
 nsis:
   # macOS-only app — no Windows installer needed

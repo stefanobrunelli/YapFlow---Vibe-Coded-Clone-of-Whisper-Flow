@@ -1,6 +1,6 @@
 {
   "name": "yapflow",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Voice-to-prompt macOS desktop app — lightweight Wispr Flow alternative",
   "main": "./out/main/index.js",
   "author": {
@@ -13,12 +13,12 @@
     "build": "electron-vite build",
     "preview": "env -u ELECTRON_RUN_AS_NODE YAPFLOW_RUNTIME_PROFILE=production electron-vite preview",
     "package": "npm run package:prod",
-    "package:prod": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app YAPFLOW_PRODUCT_NAME='YapFlow' YAPFLOW_OUTPUT_DIR='releases/prod' electron-builder",
-    "package:test": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app.test YAPFLOW_PRODUCT_NAME='YapFlow Test' YAPFLOW_OUTPUT_DIR='releases/test' electron-builder",
-    "package:mac": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app YAPFLOW_PRODUCT_NAME='YapFlow' YAPFLOW_OUTPUT_DIR='releases/prod' electron-builder --mac",
-    "package:mac:test": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app.test YAPFLOW_PRODUCT_NAME='YapFlow Test' YAPFLOW_OUTPUT_DIR='releases/test' electron-builder --mac",
-    "package:mac:unsigned": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app YAPFLOW_PRODUCT_NAME='YapFlow' YAPFLOW_OUTPUT_DIR='releases/prod' CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
-    "package:mac:unsigned:test": "npm run build && env -u ELECTRON_RUN_AS_NODE YAPFLOW_APP_ID=com.yapflow.app.test YAPFLOW_PRODUCT_NAME='YapFlow Test' YAPFLOW_OUTPUT_DIR='releases/test' CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "package:prod": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/prod --app-id=com.yapflow.app --product-name=YapFlow",
+    "package:test": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/test --app-id=com.yapflow.app.test --product-name=YapFlow Test",
+    "package:mac": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/prod --app-id=com.yapflow.app --product-name=YapFlow -- --mac",
+    "package:mac:test": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/test --app-id=com.yapflow.app.test --product-name=YapFlow Test -- --mac",
+    "package:mac:unsigned": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/prod --app-id=com.yapflow.app --product-name=YapFlow -- --mac",
+    "package:mac:unsigned:test": "npm run build && node ./scripts/run-electron-builder.mjs --out-dir=releases/test --app-id=com.yapflow.app.test --product-name=YapFlow Test -- --mac",
     "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p src/renderer/tsconfig.json"
   },
@@ -30,7 +30,7 @@
     "openai": "^4.47.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "uiohook-napi": "^1.5.3"
+    "uiohook-napi": "^1.5.5"
   },
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.2",

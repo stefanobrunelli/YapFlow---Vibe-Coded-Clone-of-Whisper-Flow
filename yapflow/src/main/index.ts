@@ -78,11 +78,15 @@ app.whenReady().then(async () => {
 
   // Start listening for the global hold shortcut.
   // Initialise with the saved shortcut (falls back to default ⌘⌥Space).
-  // Must start AFTER app.whenReady()
+  // Must start AFTER app.whenReady(). The native uiohook runs in a
+  // utilityProcess child — see shortcutManager.ts. If the child wedges
+  // (uiohook-napi's pthread bug post-wake) we can SIGKILL and respawn
+  // without freezing the main process, so no startup deferral is needed.
   shortcutManager = new ShortcutManager(
     windowManager,
     settings.shortcut ?? DEFAULT_SETTINGS.shortcut,
-    settings.shortcutBehavior ?? DEFAULT_SETTINGS.shortcutBehavior
+    settings.shortcutBehavior ?? DEFAULT_SETTINGS.shortcutBehavior,
+    logger
   )
   shortcutManager.start()
 
@@ -104,28 +108,34 @@ app.whenReady().then(async () => {
     windowManager.show()
   })
 
-  // macOS sleep/wake: uiohook's native hook dies across sleep cycles.
-  // On suspend, reset transient key state. On resume, restart the hook so
-  // the shortcut works again without needing a manual app restart.
+  // macOS sleep/wake: uiohook's native hook can deadlock post-wake (the
+  // mutex bug in uiohook_worker.c). We mitigate two ways:
+  //   1. Pre-sleep: tell the child to stop the native hook cleanly so it
+  //      releases its Core Graphics event tap before the machine suspends.
+  //   2. Post-wake: restart the child. If the child wedged during sleep,
+  //      the liveness pinger in ShortcutManager will detect it and SIGKILL
+  //      independently of this resume hook.
   powerMonitor.on('suspend', () => {
+    shortcutManager.stop()
     shortcutManager.resetState()
     // Force the renderer back to idle in case it was mid-recording
     windowManager.getWindow()?.webContents.send('force-reset')
   })
 
   powerMonitor.on('resume', () => {
-    shortcutManager.restart()
+    shortcutManager.start()
   })
 
   // Screen lock/unlock is separate from sleep on macOS (e.g. hot corner, Ctrl⌘Q).
-  // The hook dies on lock too, so restart it the same way.
+  // The hook dies on lock too, so we mirror the sleep/wake handling.
   powerMonitor.on('lock-screen', () => {
+    shortcutManager.stop()
     shortcutManager.resetState()
     windowManager.getWindow()?.webContents.send('force-reset')
   })
 
   powerMonitor.on('unlock-screen', () => {
-    shortcutManager.restart()
+    shortcutManager.start()
   })
 
   app.on('activate', () => {
@@ -141,8 +151,11 @@ app.whenReady().then(async () => {
 // ─── Quit handling ─────────────────────────────────────────────────────────────
 
 app.on('before-quit', () => {
-  // Stop uiohook before quitting to avoid native crashes
+  // Tell the hook child to stop gracefully, then SIGKILL it to guarantee
+  // no zombie processes (the wedged-main-thread bug left six stragglers
+  // last time because the JS quit path never ran).
   shortcutManager?.stop()
+  shortcutManager?.kill()
   trayManager?.destroy()
 })
 
