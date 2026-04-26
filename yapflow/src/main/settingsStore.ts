@@ -24,6 +24,13 @@ interface StoreSchema {
 export class SettingsStore {
   private store: Store<StoreSchema>
 
+  // Decrypted keys cached for the process lifetime. `undefined` = not yet
+  // read (will trigger a decrypt on first access); `null` = confirmed absent.
+  // Each decrypt of safeStorage can surface a keychain prompt for unsigned
+  // builds, so caching keeps it to one prompt per key per session.
+  private cachedOpenAIKey: string | null | undefined = undefined
+  private cachedGroqKey: string | null | undefined = undefined
+
   constructor() {
     this.store = new Store<StoreSchema>({
       name: 'config',
@@ -59,29 +66,41 @@ export class SettingsStore {
       // Fallback: store unencrypted with a warning (dev-only scenario)
       console.warn('[SettingsStore] safeStorage not available — storing key in plaintext (dev only)')
       this.store.set('encryptedApiKey', Buffer.from(key).toString('base64'))
+      this.cachedOpenAIKey = key
       return
     }
     const encrypted = safeStorage.encryptString(key)
     this.store.set('encryptedApiKey', encrypted.toString('base64'))
+    this.cachedOpenAIKey = key
   }
 
   /**
    * Retrieve and decrypt the API key.
-   * Returns null if no key has been saved.
+   * Returns null if no key has been saved. Cached after first successful read.
    */
   getApiKey(): string | null {
+    if (this.cachedOpenAIKey !== undefined) return this.cachedOpenAIKey
+
     const encoded = this.store.get('encryptedApiKey', '')
-    if (!encoded) return null
+    if (!encoded) {
+      this.cachedOpenAIKey = null
+      return null
+    }
 
     try {
       if (!safeStorage.isEncryptionAvailable()) {
         // Dev fallback: reverse the base64 encoding
-        return Buffer.from(encoded, 'base64').toString('utf-8')
+        const decoded = Buffer.from(encoded, 'base64').toString('utf-8')
+        this.cachedOpenAIKey = decoded
+        return decoded
       }
       const buffer = Buffer.from(encoded, 'base64')
-      return safeStorage.decryptString(buffer)
+      const decrypted = safeStorage.decryptString(buffer)
+      this.cachedOpenAIKey = decrypted
+      return decrypted
     } catch (err) {
       console.error('[SettingsStore] Failed to decrypt API key:', err)
+      // Don't cache failures — user may retry after granting keychain access.
       return null
     }
   }
@@ -113,6 +132,7 @@ export class SettingsStore {
 
   clearApiKey(): void {
     this.store.set('encryptedApiKey', '')
+    this.cachedOpenAIKey = null
   }
 
   // ─── Groq API Key (safeStorage) ────────────────────────────────────────────
@@ -121,22 +141,33 @@ export class SettingsStore {
     if (!safeStorage.isEncryptionAvailable()) {
       console.warn('[SettingsStore] safeStorage not available — storing Groq key in plaintext (dev only)')
       this.store.set('encryptedGroqApiKey', Buffer.from(key).toString('base64'))
+      this.cachedGroqKey = key
       return
     }
     const encrypted = safeStorage.encryptString(key)
     this.store.set('encryptedGroqApiKey', encrypted.toString('base64'))
+    this.cachedGroqKey = key
   }
 
   getGroqApiKey(): string | null {
+    if (this.cachedGroqKey !== undefined) return this.cachedGroqKey
+
     const encoded = this.store.get('encryptedGroqApiKey', '')
-    if (!encoded) return null
+    if (!encoded) {
+      this.cachedGroqKey = null
+      return null
+    }
 
     try {
       if (!safeStorage.isEncryptionAvailable()) {
-        return Buffer.from(encoded, 'base64').toString('utf-8')
+        const decoded = Buffer.from(encoded, 'base64').toString('utf-8')
+        this.cachedGroqKey = decoded
+        return decoded
       }
       const buffer = Buffer.from(encoded, 'base64')
-      return safeStorage.decryptString(buffer)
+      const decrypted = safeStorage.decryptString(buffer)
+      this.cachedGroqKey = decrypted
+      return decrypted
     } catch (err) {
       console.error('[SettingsStore] Failed to decrypt Groq API key:', err)
       return null
@@ -162,5 +193,6 @@ export class SettingsStore {
 
   clearGroqApiKey(): void {
     this.store.set('encryptedGroqApiKey', '')
+    this.cachedGroqKey = null
   }
 }

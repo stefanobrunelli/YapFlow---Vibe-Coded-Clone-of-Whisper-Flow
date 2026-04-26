@@ -5,7 +5,7 @@
 Hold a key, speak, release — YapFlow transcribes your voice and rewrites it into clean text or a polished AI prompt, instantly pasted wherever you're typing.
 
 ![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?logo=apple)
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![Stack](https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20TypeScript-informational)
 ![Powered by](https://img.shields.io/badge/powered%20by-OpenAI-412991)
 
@@ -32,19 +32,11 @@ Built as a fast, private, low-cost alternative to Wispr Flow. No subscription. N
 
 ---
 
-## For End Users (No Coding Required)
+## Showcase Status
 
-You don't need to be a developer to use YapFlow. Just download the `.dmg` file and follow the guide below.
+This repository is a portfolio/showcase project for YapFlow. It is not packaged as a polished public installer, and macOS permissions can be sensitive to bundle identity, signing, and where the app is launched from.
 
-**→ [Full Setup Guide — Plain English, step by step](SETUP_GUIDE.md)**
-
-The guide covers:
-- Creating an OpenAI account and getting your API key
-- Adding €5 in credit (enough for thousands of uses)
-- Downloading and installing YapFlow on your Mac
-- Granting the required macOS permissions
-- Using the app for the first time
-- Troubleshooting common issues
+If you run it locally, expect to provide your own OpenAI or Groq API key and grant macOS Microphone, Accessibility, and Input Monitoring permissions.
 
 ---
 
@@ -90,25 +82,24 @@ The app needs three permissions to work fully:
 
 Input Monitoring is required. Accessibility is optional (clipboard-only mode works without it).
 
-### Build & Distribute
+### Build Locally
 
 ```bash
-# Unsigned build — share with friends for testing
-npm run package:mac:unsigned
+# Production build output
+npm run build
 
-# Signed build — requires Apple Developer Program ($99/year)
-npm run package:mac
+# Optional local macOS package
+npm run package:mac:unsigned
 ```
 
-Output files land in `releases/`:
+Package output files land in `releases/`, which is intentionally ignored by git.
 
 | File | For |
 |---|---|
-| `YapFlow-0.1.0-arm64.dmg` | Apple Silicon Macs (M1/M2/M3/M4 — any Mac from late 2020) |
-| `YapFlow-0.1.0.dmg` | Intel Macs (pre-2020) |
+| `YapFlow-2.0.2-arm64.dmg` | Apple Silicon Macs (M1/M2/M3/M4 — any Mac from late 2020) |
+| `YapFlow-2.0.2-arm64.zip` | Apple Silicon Macs, zipped app bundle |
 
-> **Sharing the DMG:** Send the `.dmg` file directly (or zip it for messaging apps). Recipients follow the [Setup Guide](SETUP_GUIDE.md) to install.
-> The "unidentified developer" warning on first open is expected for unsigned apps — it's not malware.
+This GitHub repo is meant to show the app and code, not to distribute binaries to external users.
 
 ---
 
@@ -154,7 +145,7 @@ src/
 ```
 
 **Security model:**
-- The renderer runs in a sandboxed browser context — no Node.js, no filesystem
+- The renderer runs with Node.js disabled and no direct filesystem access
 - The preload script is the only bridge and explicitly whitelists every channel
 - The OpenAI API key never leaves the main process; it's encrypted via macOS Keychain
 - `contextIsolation: true` · `nodeIntegration: false` · `sandbox: false`
@@ -172,13 +163,13 @@ src/
 | `uiohook-napi` build error | Run `xcode-select --install`, then `npx electron-rebuild -f -w uiohook-napi` |
 | Settings lost after update | Config: `~/Library/Application Support/YapFlow/config.json` — API key is in Keychain |
 
-Full troubleshooting steps: [Setup Guide → Troubleshooting section](SETUP_GUIDE.md#troubleshooting)
+Additional private-tester troubleshooting notes: [Setup Guide → Troubleshooting section](SETUP_GUIDE.md#troubleshooting)
 
 ---
 
 ## Tech Stack
 
-- **[Electron 31](https://electronjs.org)** — Desktop app shell
+- **[Electron 41](https://electronjs.org)** — Desktop app shell
 - **[React 18](https://react.dev) + [TypeScript](https://typescriptlang.org)** — UI and type safety
 - **[electron-vite](https://electron-vite.org)** — Build tooling
 - **[Tailwind CSS](https://tailwindcss.com)** — Styling

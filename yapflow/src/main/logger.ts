@@ -100,18 +100,6 @@ export class Logger {
     this.write({ ...sanitizeLogData(data), type: 'info', message })
   }
 
-  /**
-   * Forward a raw log line from the uiohook utilityProcess child into the
-   * same log stream. Each chunk from child stderr may contain multiple
-   * newline-separated lines; split and log each.
-   */
-  logHook(prefix: string, text: string): void {
-    for (const line of text.split('\n')) {
-      const trimmed = line.trimEnd()
-      if (trimmed) this.write({ type: 'hook', prefix, line: trimmed })
-    }
-  }
-
   private write(data: Omit<LogEntry, 'timestamp'>): void {
     const entry = {
       timestamp: new Date().toISOString(),

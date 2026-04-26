@@ -1,0 +1,21 @@
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# App build outputs and dependencies
+yapflow/node_modules/
+yapflow/out/
+yapflow/dist/
+yapflow/releases/
+
+# Logs and generated metadata
+*.log
+*.tsbuildinfo
+*.dmg
+*.dmg.blockmap
+*.zip
+*.zip.blockmap

@@ -1,5 +1,7 @@
 # YapFlow — Setup Guide
 
+> This guide is kept for local/private testing context. The GitHub repository is a portfolio showcase of the app and code, not a polished public binary distribution.
+
 ## Welcome
 
 This guide will walk you through everything you need to get YapFlow running on your Mac — from zero to dictating your first message. No technical knowledge required.
@@ -66,8 +68,8 @@ You should have received one or two `.dmg` files:
 
 | File name | Use this if... |
 |---|---|
-| `YapFlow-0.1.0-arm64.dmg` | Your Mac is from **late 2020 or newer** (M1, M2, M3, M4 chip) |
-| `YapFlow-0.1.0.dmg` | Your Mac is from **before 2020** (Intel chip) |
+| `YapFlow-2.0.2-arm64.dmg` | Your Mac is from **late 2020 or newer** (M1, M2, M3, M4 chip) |
+| `YapFlow-2.0.2-arm64.zip` | Your Mac is from **late 2020 or newer** and you prefer a zipped app bundle |
 
 **Not sure which chip you have?**
 Click the Apple menu () → About This Mac → look for "Chip" (Apple Silicon) or "Processor" (Intel).
@@ -310,4 +312,4 @@ Yes — YapFlow uses the global clipboard and macOS Accessibility features to pa
 
 ---
 
-*YapFlow v0.1.0 · macOS 13+*
+*YapFlow v2.0.2 · macOS 13+*

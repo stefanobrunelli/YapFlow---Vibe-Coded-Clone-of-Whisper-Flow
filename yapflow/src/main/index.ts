@@ -10,7 +10,7 @@
  *   settingsStore → windowManager → trayManager → shortcutManager → ipcHandlers
  */
 
-import { app, BrowserWindow, powerMonitor } from 'electron'
+import { app, BrowserWindow, dialog, powerMonitor } from 'electron'
 import { WindowManager } from './windowManager'
 import { ShortcutManager } from './shortcutManager'
 import { TrayManager } from './trayManager'
@@ -39,6 +39,10 @@ let windowManager: WindowManager
 let trayManager: TrayManager
 let shortcutManager: ShortcutManager
 let ipcHandlers: IpcHandlers
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 // ─── App lifecycle ─────────────────────────────────────────────────────────────
 
@@ -76,19 +80,41 @@ app.whenReady().then(async () => {
   trayManager = new TrayManager(windowManager)
   trayManager.create()
 
-  // Start listening for the global hold shortcut.
+  // Start listening for the global hold shortcut (uiohook-napi in-process).
   // Initialise with the saved shortcut (falls back to default ⌘⌥Space).
-  // Must start AFTER app.whenReady(). The native uiohook runs in a
-  // utilityProcess child — see shortcutManager.ts. If the child wedges
-  // (uiohook-napi's pthread bug post-wake) we can SIGKILL and respawn
-  // without freezing the main process, so no startup deferral is needed.
   shortcutManager = new ShortcutManager(
     windowManager,
     settings.shortcut ?? DEFAULT_SETTINGS.shortcut,
     settings.shortcutBehavior ?? DEFAULT_SETTINGS.shortcutBehavior,
-    logger
+    logger,
+    {
+      onAccessibilityDenied: () => {
+        // uiohook-napi reports "Failed to enable access for assistive
+        // devices" when the app isn't in Privacy & Security → Accessibility.
+        // Without this dialog the app appears broken silently after launch.
+        const res = dialog.showMessageBoxSync({
+          type: 'warning',
+          title: 'YapFlow needs Accessibility access',
+          message: 'YapFlow needs Accessibility permission to listen for your global shortcut.',
+          detail:
+            'Open System Settings → Privacy & Security → Accessibility and enable YapFlow, then restart the app.',
+          buttons: ['Open System Settings', 'Later'],
+          defaultId: 0,
+          cancelId: 1,
+          noLink: true
+        })
+        if (res === 0) permissionChecker.openAccessibilitySettings()
+      }
+    }
   )
-  shortcutManager.start()
+  try {
+    shortcutManager.start()
+  } catch (err) {
+    // Accessibility denial surfaces here — the onAccessibilityDenied dialog
+    // has already fired. Swallow so the app stays alive in the menu bar;
+    // once the user grants permission and relaunches, start() will succeed.
+    logger.logError('initial shortcutManager.start', err)
+  }
 
   // Register all IPC handlers (must come after shortcutManager is created
   // so the shortcut capture handlers can reference it)
@@ -108,35 +134,42 @@ app.whenReady().then(async () => {
     windowManager.show()
   })
 
-  // macOS sleep/wake: uiohook's native hook can deadlock post-wake (the
-  // mutex bug in uiohook_worker.c). We mitigate two ways:
-  //   1. Pre-sleep: tell the child to stop the native hook cleanly so it
-  //      releases its Core Graphics event tap before the machine suspends.
-  //   2. Post-wake: restart the child. If the child wedged during sleep,
-  //      the liveness pinger in ShortcutManager will detect it and SIGKILL
-  //      independently of this resume hook.
-  powerMonitor.on('suspend', () => {
+  // macOS sleep/wake: uiohook's native Carbon event tap releases on suspend
+  // and needs to be restarted on wake. Retry with backoff because macOS can
+  // take a few seconds to restore Accessibility/Input Monitoring after wake.
+  const restartHookOnWake = () => {
+    void (async () => {
+      const delaysMs = [1000, 3000, 8000]
+
+      for (let i = 0; i < delaysMs.length; i++) {
+        await sleep(delaysMs[i])
+        try {
+          shortcutManager.start()
+          logger.logInfo('shortcutManager: restarted after wake', { attempt: i + 1 })
+          return
+        } catch (err) {
+          logger.logError(`shortcutManager.restartOnWake attempt ${i + 1}`, err)
+        }
+      }
+
+      logger.logInfo('shortcutManager: hook failed after wake retries, relaunching app')
+      app.relaunch()
+      app.quit()
+    })()
+  }
+
+  const suspendHook = () => {
     shortcutManager.stop()
     shortcutManager.resetState()
-    // Force the renderer back to idle in case it was mid-recording
     windowManager.getWindow()?.webContents.send('force-reset')
-  })
+  }
 
-  powerMonitor.on('resume', () => {
-    shortcutManager.start()
-  })
-
-  // Screen lock/unlock is separate from sleep on macOS (e.g. hot corner, Ctrl⌘Q).
-  // The hook dies on lock too, so we mirror the sleep/wake handling.
-  powerMonitor.on('lock-screen', () => {
-    shortcutManager.stop()
-    shortcutManager.resetState()
-    windowManager.getWindow()?.webContents.send('force-reset')
-  })
-
-  powerMonitor.on('unlock-screen', () => {
-    shortcutManager.start()
-  })
+  powerMonitor.on('suspend', suspendHook)
+  powerMonitor.on('resume', restartHookOnWake)
+  // Screen lock/unlock is separate from sleep on macOS (hot corner, Ctrl⌘Q).
+  // The hook dies on lock too, so mirror the sleep handling.
+  powerMonitor.on('lock-screen', suspendHook)
+  powerMonitor.on('unlock-screen', restartHookOnWake)
 
   app.on('activate', () => {
     // macOS: re-create window if Dock icon is clicked and no windows open
@@ -151,11 +184,7 @@ app.whenReady().then(async () => {
 // ─── Quit handling ─────────────────────────────────────────────────────────────
 
 app.on('before-quit', () => {
-  // Tell the hook child to stop gracefully, then SIGKILL it to guarantee
-  // no zombie processes (the wedged-main-thread bug left six stragglers
-  // last time because the JS quit path never ran).
   shortcutManager?.stop()
-  shortcutManager?.kill()
   trayManager?.destroy()
 })
 
