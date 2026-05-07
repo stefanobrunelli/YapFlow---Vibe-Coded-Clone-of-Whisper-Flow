@@ -4,6 +4,8 @@
 
 Hold a key, speak, release — YapFlow transcribes your voice and rewrites it into clean text or a polished AI prompt, instantly pasted wherever you're typing.
 
+Yapflow is *heavily* inspired by the popular Wisperflow app. Yapflow matches (if not supersedes) the functionality but for free vs the $10 subscription of the original. Better output, but for free.
+
 ![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?logo=apple)
 ![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![Stack](https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20TypeScript-informational)
